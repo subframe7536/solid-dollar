@@ -1,13 +1,13 @@
 import { createSignal } from 'solid-js'
 import { } from '@solidjs/testing-library'
 import { describe, expect, expectTypeOf, test } from 'vitest'
-import { $, $res, $store } from '../src'
+import { $, $resource, $signal, $store } from '../src'
 
 describe('createSignal($)', () => {
   test('$()', () => {
     const foo = $()
     expect(foo()).toBe(undefined)
-    const bar = $(1)
+    const bar = $signal(1)
     expect(bar()).toBe(1)
     bar.set(2)
     expect(bar()).toBe(2)
@@ -16,7 +16,7 @@ describe('createSignal($)', () => {
     expectTypeOf(bar.signal[1]).toBeFunction()
   })
   test('$(createSignal())', () => {
-    const x = $(createSignal(2))
+    const x = $signal(createSignal(2))
     expect(x()).toBe(2)
     x.set(4)
     expect(x()).toBe(4)
@@ -30,7 +30,7 @@ describe('createResource($res)', () => {
   test('$res()', () => {
     const t = $(1)
     const fetchUser = async (id: number) => id++
-    const foo = $res(t, fetchUser, { name: 'test' })
+    const foo = $resource(t, fetchUser, { name: 'test' })
     expect(foo()).toBe(2)
   })
 })

@@ -7,10 +7,15 @@ type ResourceObject<T, R> = ResourceReturn<T, R>[0] & {
   mutate: ResourceReturn<T, R>[1]['mutate']
   refetch: ResourceReturn<T, R>[1]['refetch']
 }
-export function $res<T, R = unknown>(...args: ResourceParam<T, R>): ResourceObject<T, R> {
+export function $resource<T, R = unknown>(...args: ResourceParam<T, R>): ResourceObject<T, R> {
   const [data, { mutate, refetch }] = createResource<T, R>(...args)
   const obj = data
-  Object.defineProperty(obj, 'mutate', { value: mutate })
-  Object.defineProperty(obj, 'refetch', { value: refetch })
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  obj.mutate = mutate
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  obj.refetch = refetch
   return obj as ResourceObject<T, R>
 }
+export const $res = $resource

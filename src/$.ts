@@ -33,3 +33,4 @@ export function $<T>(...args: [] | [Signal<T>] | SignalParam<T>) {
   obj.signal = Object.freeze([value, setValue])
   return obj
 }
+export const $signal = $
