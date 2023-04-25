@@ -1,0 +1,1 @@
+# TSTemplate(monorepo)/tsup
