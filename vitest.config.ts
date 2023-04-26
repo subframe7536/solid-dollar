@@ -4,4 +4,7 @@ export default defineConfig({
   test: {
     environment: 'happy-dom',
   },
+  resolve: {
+    conditions: ['development', 'browser'],
+  },
 })

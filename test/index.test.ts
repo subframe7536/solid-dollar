@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js'
+import { createEffect, createRoot, createSignal, on } from 'solid-js'
 import { } from '@solidjs/testing-library'
 import { describe, expect, expectTypeOf, test } from 'vitest'
 import { $, $resource, $signal, $store } from '../src'
@@ -28,10 +28,14 @@ describe('createSignal($)', () => {
 
 describe('createResource($res)', () => {
   test('$res()', () => {
-    const t = $(1)
-    const fetchUser = async (id: number) => id++
-    const foo = $resource(t, fetchUser, { name: 'test' })
-    expect(foo()).toBe(2)
+    createRoot(() => {
+      const t = $(1)
+      const fetchUser = async (id: number) => ++id
+      const foo = $resource(t, fetchUser, { name: 'test' })
+      createEffect(on(foo, () => {
+        expect(foo()).toBe(2)
+      }, { defer: true }))
+    })
   })
 })
 
