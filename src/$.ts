@@ -1,21 +1,25 @@
 import type { Signal } from 'solid-js'
 import { createSignal } from 'solid-js'
 
-type SignalReturn<T> = ReturnType<typeof createSignal<T>>
-type SignalParam<T> = Parameters<typeof createSignal<T>>
+import type { SignalObject, SignalParam } from './type'
 
-interface SignalObject<T> {
-  (): T
-  set: SignalReturn<T>[1]
-  readonly signal: SignalReturn<T>
-}
-
-function isSignal<T>(val: unknown): val is Signal<T> {
+export function isSignal<T>(val: unknown): val is Signal<T> {
   return (
     Array.isArray(val)
     && val.length === 2
     && typeof val[0] === 'function'
     && typeof val[1] === 'function'
+  )
+}
+
+export function isSignalObject<T>(val: unknown): val is SignalObject<T> {
+  return (
+    typeof val === 'function'
+    && 'set' in val
+    && typeof val.set === 'function'
+    && 'signal' in val
+    && Array.isArray(val.signal)
+    && val.signal[1] === val.set
   )
 }
 
@@ -31,6 +35,7 @@ export function $<T>(...args: [] | [Signal<T>] | SignalParam<T>) {
   const obj = () => value()
   obj.set = setValue
   obj.signal = Object.freeze([value, setValue])
+
   return obj
 }
 export const $signal = $

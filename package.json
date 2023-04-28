@@ -41,11 +41,12 @@
     "build": "tsup",
     "dev": "tsup --watch src/index.ts",
     "test": "vitest run",
-    "test:w": "vitest"
+    "test:w": "vitest",
+    "lint": "eslint --cache --fix ."
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.7.0",
-    "@subframe7536/eslint-config": "^0.1.1",
+    "@subframe7536/eslint-config": "^0.1.2",
     "eslint": "^8.33.0",
     "eslint-plugin-solid": "^0.12.1",
     "happy-dom": "^9.9.2",

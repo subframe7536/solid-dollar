@@ -1,12 +1,13 @@
-import { createEffect, createRoot, createSignal, on } from 'solid-js'
-import { } from '@solidjs/testing-library'
+import { createEffect, createSignal, on } from 'solid-js'
+import { testEffect } from '@solidjs/testing-library'
 import { describe, expect, expectTypeOf, test } from 'vitest'
-import { $, $resource, $signal, $store } from '../src'
+import { $, $resource, $signal, $store, isSignalObject } from '../src'
 
 describe('createSignal($)', () => {
   test('$()', () => {
     const foo = $()
     expect(foo()).toBe(undefined)
+    expect(isSignalObject(foo)).toBe(true)
     const bar = $signal(1)
     expect(bar()).toBe(1)
     bar.set(2)
@@ -28,12 +29,13 @@ describe('createSignal($)', () => {
 
 describe('createResource($res)', () => {
   test('$res()', () => {
-    createRoot(() => {
+    testEffect((done) => {
       const t = $(1)
       const fetchUser = async (id: number) => ++id
       const foo = $resource(t, fetchUser, { name: 'test' })
       createEffect(on(foo, () => {
         expect(foo()).toBe(2)
+        done()
       }, { defer: true }))
     })
   })

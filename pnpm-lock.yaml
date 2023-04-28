@@ -5,8 +5,8 @@ devDependencies:
     specifier: ^0.7.0
     version: 0.7.0(solid-js@1.7.3)
   '@subframe7536/eslint-config':
-    specifier: ^0.1.1
-    version: 0.1.1(eslint@8.33.0)(typescript@5.0.4)
+    specifier: ^0.1.2
+    version: 0.1.2(eslint@8.33.0)(typescript@5.0.4)
   eslint:
     specifier: ^8.33.0
     version: 8.33.0
@@ -473,8 +473,8 @@ packages:
       solid-js: 1.7.3
     dev: true
 
-  /@subframe7536/eslint-config@0.1.1(eslint@8.33.0)(typescript@5.0.4):
-    resolution: {integrity: sha512-l4OrI6EjqYgisBRSFD8L6wO2EgBYclw+UuCeEj7n84I6W+ZIGjCma+a5myqFMaiT8POjMcfJlxnCk4uUQyRq5A==}
+  /@subframe7536/eslint-config@0.1.2(eslint@8.33.0)(typescript@5.0.4):
+    resolution: {integrity: sha512-QSZtVFziopql6bYmNpynVqMm3qqcAFWz/F1jiZdJ2Fj88+g4/cq1NPdCfeOyBdmW0ymYzxw75S4qIyyiJAZqQg==}
     peerDependencies:
       eslint: '>=7.4.0'
     dependencies:

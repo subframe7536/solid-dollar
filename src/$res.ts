@@ -1,12 +1,6 @@
 import { createResource } from 'solid-js'
+import type { ResourceObject, ResourceParam } from './type'
 
-type ResourceReturn<T, R = unknown> = ReturnType<typeof createResource<T, R>>
-type ResourceParam<T, R = unknown> = Parameters<typeof createResource<T, R>>
-
-type ResourceObject<T, R> = ResourceReturn<T, R>[0] & {
-  mutate: ResourceReturn<T, R>[1]['mutate']
-  refetch: ResourceReturn<T, R>[1]['refetch']
-}
 export function $resource<T, R = unknown>(...args: ResourceParam<T, R>): ResourceObject<T, R> {
   const [data, { mutate, refetch }] = createResource<T, R>(...args)
   const obj = data
