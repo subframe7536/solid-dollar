@@ -1,6 +1,6 @@
 import { deepTrack } from '@solid-primitives/deep'
 import type { FlowComponent, JSX, ParentComponent } from 'solid-js'
-import { createComponent, createContext, createEffect, on, onMount, useContext } from 'solid-js'
+import { createComponent, createContext, createEffect, on, useContext } from 'solid-js'
 import { createStore, produce } from 'solid-js/store'
 import type { ActionReturn, BaseStore, NormalizedPersistOption, PersistOption, StoreOption } from './type'
 
@@ -44,10 +44,7 @@ export function $store<
   const initalState = typeof state === 'function' ? state() : state
   const [store, setStore] = createStore<T>(initalState, { name })
   const option = normalizePersistOption(name, persistOption)
-  onMount(() => {
-    if (!option) {
-      return
-    }
+  if (option) {
     const { debug, key, serializer: { deserialize, serialize }, storage } = option
     const stored = storage.getItem(key)
     createEffect(on(() => deepTrack(store), () => {
@@ -59,7 +56,7 @@ export function $store<
     } catch (e) {
       debug && console.log(e)
     }
-  })
+  }
   const $patch = (cb: (state: T) => void) => setStore(produce(store => cb(store)))
   const $reset = () => setStore(initalState)
 

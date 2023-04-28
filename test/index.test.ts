@@ -42,6 +42,7 @@ describe('createResource($res)', () => {
 
 describe('createStore($store)', () => {
   test('$store()', () => {
+    const kv = new Map()
     createRoot(() => {
       const [, useTestStore] = $store('test', {
         state: { test: 1 },
@@ -50,6 +51,20 @@ describe('createStore($store)', () => {
             set('test', test => test * 2)
           },
         }),
+        persist: {
+          enable: true,
+          storage: {
+            getItem(key) {
+              console.log('getValue', key)
+              return kv.get(key)
+            },
+            setItem(key, value) {
+              console.log('setValue', key, value)
+              kv.set(key, value)
+            },
+          },
+          debug: true,
+        },
       })
       const { store, double } = useTestStore()
       expect(store.test).toBe(1)
