@@ -1,8 +1,8 @@
+import { deepTrack } from '@solid-primitives/deep'
 import type { FlowComponent, JSX, ParentComponent } from 'solid-js'
 import { createComponent, createContext, createEffect, on, onMount, useContext } from 'solid-js'
-
 import { createStore, produce } from 'solid-js/store'
-import type { BaseStore, NormalizedPersistOption, PersistOption, StoreOption } from './type'
+import type { ActionReturn, BaseStore, NormalizedPersistOption, PersistOption, StoreOption } from './type'
 
 function normalizePersistOption<T extends object>(
   name: string,
@@ -35,12 +35,14 @@ function normalizePersistOption<T extends object>(
 
 export function $store<
   T extends object = {},
-  R extends Record<string, (...args: any[]) => void> = {},
+  R extends ActionReturn = {},
 >(
+  name: string,
   options: StoreOption<T, R>,
 ): [provider: ParentComponent, useStore: () => BaseStore<T, R>] {
-  const { action, name, state, persist: persistOption } = options
-  const [store, setStore] = createStore<T>(state, { name })
+  const { action, state, persist: persistOption } = options
+  const initalState = typeof state === 'function' ? state() : state
+  const [store, setStore] = createStore<T>(initalState, { name })
   const option = normalizePersistOption(name, persistOption)
   onMount(() => {
     if (!option) {
@@ -48,21 +50,18 @@ export function $store<
     }
     const { debug, key, serializer: { deserialize, serialize }, storage } = option
     const stored = storage.getItem(key)
+    createEffect(on(() => deepTrack(store), () => {
+      debug && console.log(store)
+      storage.setItem(key, serialize(store))
+    }, { defer: true }))
     try {
       stored && setStore(deserialize(stored))
-      createEffect(on(() => state, () => {
-        storage.setItem(key, serialize(state))
-      }))
     } catch (e) {
       debug && console.log(e)
     }
   })
-  const $patch = (cb: (state: T) => void) => {
-    setStore(produce(store => cb(store)))
-  }
-  const $reset = () => {
-    setStore(state)
-  }
+  const $patch = (cb: (state: T) => void) => setStore(produce(store => cb(store)))
+  const $reset = () => setStore(initalState)
 
   const ctxData = { store, ...action(setStore), $patch, $reset }
   const ctx = createContext(ctxData, { name: `ctx_${name}` })

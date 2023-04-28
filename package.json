@@ -58,5 +58,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "@solid-primitives/deep": "^0.0.102"
   }
 }

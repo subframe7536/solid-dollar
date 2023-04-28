@@ -1,5 +1,10 @@
 lockfileVersion: '6.0'
 
+dependencies:
+  '@solid-primitives/deep':
+    specifier: ^0.0.102
+    version: 0.0.102(solid-js@1.7.3)
+
 devDependencies:
   '@solidjs/testing-library':
     specifier: ^0.7.0
@@ -462,6 +467,14 @@ packages:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.15.0
     dev: true
+
+  /@solid-primitives/deep@0.0.102(solid-js@1.7.3):
+    resolution: {integrity: sha512-qD4J69VUDnnjwe4zlU3yEyZoa04wF8atytU88i80+CZ4pi7qNKEjTiU1DQg6lMTtx9znZrhChz349sRfHViVPQ==}
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      solid-js: 1.7.3
+    dev: false
 
   /@solidjs/testing-library@0.7.0(solid-js@1.7.3):
     resolution: {integrity: sha512-mTSINHdcLc6rn9xWWJfzPkY0zyKtLb7QAM2CouVw2QvNZ0mgfk3z2tpaprismlE/YLn+I3ij4BqiV3ocvI+hIQ==}
@@ -1048,7 +1061,6 @@ packages:
 
   /csstype@3.1.2:
     resolution: {integrity: sha512-I7K1Uu0MBPzaFKg4nI5Q7Vs2t+3gWWW648spaF+Rg7pI9ds18Ugn+lvg4SHczUdKlHI5LWBXyqfS8+DufyBsgQ==}
-    dev: true
 
   /date-time@3.1.0:
     resolution: {integrity: sha512-uqCUKXE5q1PNBXjPqvwhwJf9SwMoAHBgWJ6DcrnS5o+W2JOiIILl0JEdVD8SGujrNS02GGxgwAg2PN2zONgtjg==}
@@ -2972,7 +2984,6 @@ packages:
   /seroval@0.5.1:
     resolution: {integrity: sha512-ZfhQVB59hmIauJG5Ydynupy8KHyr5imGNtdDhbZG68Ufh1Ynkv9KOYOAABf71oVbQxJ8VkWnMHAjEHE7fWkH5g==}
     engines: {node: '>=10'}
-    dev: true
 
   /shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
@@ -3012,7 +3023,6 @@ packages:
     dependencies:
       csstype: 3.1.2
       seroval: 0.5.1
-    dev: true
 
   /source-map-js@1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}

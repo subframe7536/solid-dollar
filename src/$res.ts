@@ -12,4 +12,7 @@ export function $resource<T, R = unknown>(...args: ResourceParam<T, R>): Resourc
   obj.refetch = refetch
   return obj as ResourceObject<T, R>
 }
+/**
+ * alias for {@link $resource}
+ */
 export const $res = $resource

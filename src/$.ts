@@ -1,4 +1,4 @@
-import type { Signal } from 'solid-js'
+import type { Setter, Signal } from 'solid-js'
 import { createSignal } from 'solid-js'
 
 import type { SignalObject, SignalParam } from './type'
@@ -15,27 +15,30 @@ export function isSignal<T>(val: unknown): val is Signal<T> {
 export function isSignalObject<T>(val: unknown): val is SignalObject<T> {
   return (
     typeof val === 'function'
-    && 'set' in val
-    && typeof val.set === 'function'
     && 'signal' in val
     && Array.isArray(val.signal)
-    && val.signal[1] === val.set
+    && typeof val.signal[0] === 'function'
+    && typeof val.signal[1] === 'function'
   )
 }
 
-export function $<T>(...args: []): SignalObject<T | undefined>
-export function $<T>(...args: [Signal<T>]): SignalObject<T>
-export function $<T>(...args: SignalParam<T>): SignalObject<T>
-export function $<T>(...args: [] | [Signal<T>] | SignalParam<T>) {
-  const [value, setValue] = args.length === 0
+export function $signal<T>(...args: []): SignalObject<T | undefined>
+export function $signal<T>(...args: [Signal<T>]): SignalObject<T>
+export function $signal<T>(...args: SignalParam<T>): SignalObject<T>
+export function $signal<T>(...args: [] | [Signal<T>] | SignalParam<T>) {
+  const signal = args.length === 0
     ? createSignal<T>()
     : isSignal<T>(args[0])
       ? args[0]
       : createSignal(...args as SignalParam<T>)
-  const obj = () => value()
-  obj.set = setValue
-  obj.signal = Object.freeze([value, setValue])
-
+  const obj = (setter?: Parameters<Setter<T>>[0]) => {
+    setter && (signal[1] as Setter<T>)(setter)
+    return signal[0]()
+  }
+  obj.source = Object.freeze(signal)
   return obj
 }
-export const $signal = $
+/**
+ * alias for {@link $signal}
+ */
+export const $ = $signal

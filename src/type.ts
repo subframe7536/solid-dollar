@@ -1,14 +1,13 @@
-import type { createResource, createSignal } from 'solid-js'
+import type { Setter, Signal, createResource, createSignal } from 'solid-js'
 
 import type { SetStoreFunction } from 'solid-js/store/types/store'
 
-export type SignalReturn<T> = ReturnType<typeof createSignal<T>>
 export type SignalParam<T> = Parameters<typeof createSignal<T>>
 
 export type SignalObject<T> = {
   (): T
-  set: SignalReturn<T>[1]
-  readonly signal: SignalReturn<T>
+  (setter: Parameters<Setter<T>>[0]): T
+  readonly source: Signal<T>
 }
 
 export type ResourceReturn<T, R = unknown> = ReturnType<typeof createResource<T, R>>
@@ -25,14 +24,14 @@ export type BaseStore<T, R> = R & {
   $reset: () => void
 }
 
-export type StoreOption<T extends object, R extends Record<string, (...args: any[]) => void>> = {
-  name: string
-  state: T
+export type StoreOption<T extends object, R extends ActionReturn> = {
+  state: T | (() => T)
   action: ActionFunctions<T, R>
   persist?: PersistOption<T>
 }
 
 export type ActionFunctions<T, R> = (set: SetStoreFunction<T>) => R
+export type ActionReturn = Record<string, (...args: any[]) => void>
 
 export type PersistOption<T extends object> =
 | boolean
