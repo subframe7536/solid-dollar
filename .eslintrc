@@ -1,7 +1,24 @@
 {
   "extends": "@subframe7536",
   "rules": {
-    "@typescript-eslint/explicit-member-accessibility": "off",
-    "antfu/generic-spacing": "off"
+    "react/jsx-curly-spacing": [
+      "error",
+      {
+        "when": "never",
+        "attributes": {
+          "allowMultiline": false,
+          "spacing": {
+            "objectLiterals": "always"
+          }
+        }
+      }
+    ],
+    "react/jsx-closing-tag-location": "error",
+    "react/jsx-closing-bracket-location": [
+      "error",
+      "line-aligned"
+    ],
+    "react/jsx-one-expression-per-line": "off",
+    "react/jsx-child-element-spacing": "off"
   }
 }

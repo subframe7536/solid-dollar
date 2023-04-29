@@ -44,6 +44,7 @@ export type NormalizedPersistOption<T extends object> = {
   serializer: Serializer<T>
   debug: boolean
 }
+export type N<T extends object> = NormalizedPersistOption<T>
 export type StorageLike = Pick<Storage, 'getItem' | 'setItem'>
 interface Serializer<T> {
   /**
