@@ -24,7 +24,6 @@ describe('$effect', () => {
     const str = $('old')
     const callback = vi.fn()
     const filter = (newValue: string, times: number) => {
-      console.log('🚀 ~ file: effect.test.ts:27 ~ filter', newValue, times)
       return newValue !== 'new'
     }
 

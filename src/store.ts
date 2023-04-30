@@ -1,6 +1,6 @@
 import { deepTrack } from '@solid-primitives/deep'
 import type { FlowComponent, JSX, ParentComponent, ParentProps } from 'solid-js'
-import { createComponent, createContext, createEffect, on, onMount, useContext } from 'solid-js'
+import { createComponent, createContext, observable, onMount, useContext } from 'solid-js'
 import { createStore, reconcile, unwrap } from 'solid-js/store'
 import type { SetStoreFunction } from 'solid-js/store/types/store'
 
@@ -8,6 +8,7 @@ export type BaseStore<T, R> = R & {
   store: T
   $patch: (state: T) => void
   $reset: () => void
+  $subscribe: ReturnType<typeof observable<T>>['subscribe']
 }
 
 export type StoreOption<T extends object, R extends ActionReturn> = {
@@ -73,11 +74,12 @@ export function $store<
   const { action, state, persist: persistOption } = options
   const initalState = typeof state === 'function' ? state() : state
   const [store, setStore] = createStore<T>(initalState, { name })
-  const ctxData = {
+  const ctxData: BaseStore<T, R> = {
     store,
     ...action(setStore),
     $patch: (state: T) => setStore(reconcile(state, { key: name, merge: true })),
     $reset: () => setStore(initalState),
+    $subscribe: observable(() => deepTrack(store)).subscribe,
   }
 
   const setupContext = () => {
@@ -98,10 +100,10 @@ export function $store<
           debug && console.error(`[$store - ${key}]: ${e}`)
         }
       })
-      createEffect(on(() => deepTrack(store), () => {
+      ctxData.$subscribe((store) => {
         debug && console.log(`[$store - ${key}]: update to ${JSON.stringify(store)}`)
         storage.setItem(option.key, serialize(unwrap(store)))
-      }, { defer: true }))
+      })
     }
     return ctxData
   }
