@@ -1,7 +1,14 @@
-import type { Setter, Signal } from 'solid-js'
-import { createSignal } from 'solid-js'
+import type { Accessor, Setter, Signal } from 'solid-js'
+import { createSignal, untrack } from 'solid-js'
 
-import type { SignalObject, SignalParam } from './type'
+export type SignalParam<T> = Parameters<typeof createSignal<T>>
+
+export type SignalObject<T> = {
+  (): T
+  (setter: Parameters<Setter<T>>[0]): void
+  (setter: Parameters<Setter<T>>[0], returnCurrent: true): T
+  readonly source: Signal<T>
+}
 
 export function isSignal<T>(val: unknown): val is Signal<T> {
   return (
@@ -29,14 +36,22 @@ export function $signal<T>(...args: [] | [Signal<T>] | SignalParam<T>) {
     : isSignal<T>(args[0])
       ? args[0]
       : createSignal(...args as SignalParam<T>)
-  const obj = (setter?: Parameters<Setter<T>>[0]) => {
+  const obj = (setter?: Parameters<Setter<T>>[0], returnCurrent = false) => {
     setter && (signal[1] as Setter<T>)(setter)
-    return signal[0]()
+    // eslint-disable-next-line no-void
+    return (!setter || (setter && returnCurrent)) ? signal[0]() : void 0
   }
   obj.source = Object.freeze(signal)
   return obj
 }
+export function $untrack<T>(signal: Accessor<T> | SignalObject<T>): T {
+  return untrack(signal)
+}
 /**
- * alias for {@link $signal}
+ * @alias {@link $signal}
  */
 export const $ = $signal
+/**
+ * @alias {@link $untrack}
+ */
+export const $$ = $untrack

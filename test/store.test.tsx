@@ -1,48 +1,9 @@
-import { createEffect, createRoot, createSignal, on } from 'solid-js'
-import { cleanup, fireEvent, render, testEffect } from '@solidjs/testing-library'
-import { describe, expect, expectTypeOf, test } from 'vitest'
-import { $, $resource, $signal, $store, isSignalObject } from '../src'
+import { createRoot } from 'solid-js'
+import { cleanup, fireEvent, render } from '@solidjs/testing-library'
+import { describe, expect, test } from 'vitest'
+import { $Providers, $store } from '../src'
 import { normalizePersistOption } from '../src/store'
 
-describe('test signal', () => {
-  test('$()', () => {
-    const foo = $()
-    expect(foo()).toBe(undefined)
-    expect(isSignalObject(foo)).toBe(true)
-  })
-  test('$signal(number)', () => {
-    const bar = $signal(1)
-    expect(bar()).toBe(1)
-    expect(bar(2)).toBe(2)
-    expect(bar()).toBe(2)
-    expectTypeOf(bar.source).toBeArray()
-    expectTypeOf(bar.source[0]).toBeFunction()
-    expectTypeOf(bar.source[1]).toBeFunction()
-  })
-  test('$(createSignal(string))', () => {
-    const x = $signal(createSignal('str'))
-    expect(x()).toBe('str')
-    expect(x('test modify')).toBe('test modify')
-    expect(x()).toBe('test modify')
-    expectTypeOf(x.source).toBeArray()
-    expectTypeOf(x.source[0]).toBeFunction()
-    expectTypeOf(x.source[1]).toBeFunction()
-  })
-})
-
-describe('test resource', () => {
-  test('$res()', () => {
-    testEffect((done) => {
-      const t = $(1)
-      const fetchUser = async (id: number) => ++id
-      const foo = $resource(t, fetchUser, { name: 'test' })
-      createEffect(on(foo, () => {
-        expect(foo()).toBe(2)
-        done()
-      }, { defer: true }))
-    })
-  })
-})
 describe('test normalizePersistOption()', () => {
   test('returns undefined with undefined option', () => {
     expect(normalizePersistOption('testUndefined', undefined)).toBeUndefined()
@@ -168,13 +129,13 @@ describe('test store', () => {
     })
     const { store, decrement, increment } = useStore()
     const { unmount, getByTestId } = render(() => (
-      <Provider>
+      <$Providers values={[Provider]}>
         <div>
           <p data-testid="value">{store.count}</p>
           <button data-testid="increment" onClick={increment}>Increment</button>
           <button data-testid="decrement" onClick={decrement}>Decrement</button>
         </div>
-      </Provider>
+      </$Providers>
     ))
 
     const p = getByTestId('value')
@@ -207,6 +168,7 @@ describe('test store', () => {
             kv.set(key, value)
           },
         },
+        debug: true,
       },
     })
     const { store, decrement, increment } = useStore()
@@ -224,10 +186,13 @@ describe('test store', () => {
     const incrementBtn = getByTestId('increment')
     const decrementBtn = getByTestId('decrement')
     expect(p.innerText).toBe('0')
+    expect(kv.get('test')).toBe('{"count":0}')
     fireEvent.click(incrementBtn)
     expect(p.innerText).toBe('1')
+    expect(kv.get('test')).toBe('{"count":1}')
     fireEvent.click(decrementBtn)
     expect(p.innerText).toBe('0')
+    expect(kv.get('test')).toBe('{"count":0}')
     fireEvent.click(incrementBtn)
     fireEvent.click(incrementBtn)
     unmount()
@@ -237,6 +202,7 @@ describe('test store', () => {
       </Provider>
     ))
     const newP = newContainer.querySelector('p')!
+    expect(kv.get('test')).toBe('{"count":2}')
     expect(newP.innerText).toBe('2')
     cleanup()
   })
