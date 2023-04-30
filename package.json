@@ -1,7 +1,7 @@
 {
   "name": "solid-dollar",
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "",
   "author": {
     "name": "subframe7536",
@@ -43,7 +43,9 @@
     "test": "vitest run",
     "test:w": "vitest",
     "lint": "eslint --cache --fix .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "release": "bumpp",
+    "publish": "npm publish"
   },
   "devDependencies": {
     "@solid-primitives/scheduled": "^1.3.2",
