@@ -1,11 +1,11 @@
-import type { Accessor, Setter, Signal } from 'solid-js'
+import type { Accessor, Signal } from 'solid-js'
 import { createSignal, untrack } from 'solid-js'
 
 export type SignalParam<T> = Parameters<typeof createSignal<T>>
 
 export type SignalObject<T> = {
   (): T
-  (setter: Parameters<Setter<T>>[0]): T
+  set: Signal<T>[1]
   readonly source: Signal<T>
 }
 
@@ -35,9 +35,8 @@ export function $signal<T>(...args: [] | [Signal<T>] | SignalParam<T>) {
     : isSignal<T>(args[0])
       ? args[0]
       : createSignal(...args as SignalParam<T>)
-  const obj = (setter?: Parameters<Setter<T>>[0]) => {
-    return setter ? (signal[1] as Setter<T>)(setter) : signal[0]()
-  }
+  const obj = () => signal[0]()
+  obj.set = signal[1]
   obj.source = Object.freeze(signal)
   return obj
 }

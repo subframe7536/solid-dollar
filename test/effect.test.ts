@@ -9,12 +9,12 @@ describe('$effect', () => {
     $effect(value, callback, { defer: true })
 
     await Promise.resolve()
-    value(1)
+    value.set(1)
     await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(1)
     expect(callback).toHaveBeenCalledWith(1, undefined, undefined)
 
-    value(2)
+    value.set(2)
     await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
     expect(callback).toHaveBeenCalledWith(2, 1, undefined)
@@ -30,11 +30,11 @@ describe('$effect', () => {
     $effect(str, callback, { filterFn: filter, defer: true })
 
     await Promise.resolve()
-    str('new')
+    str.set('new')
     await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(0)
 
-    str('new new')
+    str.set('new new')
     await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(1)
 
@@ -49,19 +49,19 @@ describe('$effect', () => {
     const { pause, resume, isWatching } = $effect(value, callback, { defer: true })
 
     await Promise.resolve()
-    value(100)
+    value.set(100)
     await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(1)
     expect(callback).toHaveBeenCalledWith(100, undefined, undefined)
 
     pause()
     expect(isWatching()).toBe(false)
-    value(200)
+    value.set(200)
     await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(1)
 
     resume()
-    value(300)
+    value.set(300)
     await Promise.resolve()
     expect(callback).toHaveBeenCalledTimes(2)
 
