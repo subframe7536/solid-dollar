@@ -1,3 +1,4 @@
+/// <reference path="../node_modules/@types/wicg-file-system-access/index.d.ts" />
 export { $, $$, $signal, $untrack, isSignalObject, isSignal } from './signal'
 export type { SignalObject } from './signal'
 
