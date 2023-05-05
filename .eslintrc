@@ -1,6 +1,12 @@
 {
   "extends": "@subframe7536",
   "rules": {
+    "max-statements-per-line": [
+      "error",
+      {
+        "max": 2
+      }
+    ],
     "@typescript-eslint/explicit-member-accessibility": "off"
   }
 }

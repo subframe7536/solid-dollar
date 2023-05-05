@@ -92,3 +92,8 @@ const { isWatching, pause, resume } = $effect(str, callback, {
   defer: true,
 })
 ```
+
+## todo
+
+- [ ] `$fs` [this](https://github.com/minht11/local-music-pwa/blob/main/src/helpers/file-system.ts) and [this](https://github.com/solidjs-community/solid-primitives/blob/main/packages/filesystem/dev/index.tsx)
+- [ ] `$trans` [this](https://github.com/solidjs-community/solid-primitives/blob/main/packages/i18n/src/i18n.ts) and [this](https://github.com/SanichKotikov/i18n-mini) and [this](https://github.com/SanichKotikov/solid-i18n) and [this](https://github.com/ivanhofer/typesafe-i18n/issues) and [this](https://github.com/alienfast/vite-plugin-i18next-loader) with external file read

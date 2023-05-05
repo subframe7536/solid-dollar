@@ -2,8 +2,43 @@ import { createRoot } from 'solid-js'
 import { cleanup, fireEvent, render } from '@solidjs/testing-library'
 import { describe, expect, test } from 'vitest'
 import { $Providers, $store } from '../src'
-import { normalizePersistOption } from '../src/store'
+import { generateState, normalizePersistOption } from '../src/store'
 
+describe('generateState', () => {
+  const initialState = {
+    a: 'hello',
+    b: 42,
+    c: true,
+    d: () => { console.log('hello world!') },
+    e: async () => { console.log('async hello world!') },
+  }
+
+  const state = generateState(initialState)
+
+  test('store should have state properties', () => {
+    expect(state.store.a).toBe(initialState.a)
+    expect(state.store.b).toBe(initialState.b)
+    expect(state.store.c).toBe(initialState.c)
+  })
+
+  test('store should not have action properties', () => {
+    expect(state.d).toBeUndefined()
+    expect(state.e).toBe(undefined)
+  })
+
+  test('store should have a "store" property with state values', () => {
+    expect(state.store).toEqual({
+      a: initialState.a,
+      b: initialState.b,
+      c: initialState.c,
+    })
+  })
+
+  test('store should not have a "store" property with action values', () => {
+    expect((state.store as any).d).toBeUndefined()
+    expect((state.store as any).e).toBeUndefined()
+  })
+})
 describe('test normalizePersistOption()', () => {
   test('returns undefined with undefined option', () => {
     expect(normalizePersistOption('testUndefined', undefined)).toBeUndefined()

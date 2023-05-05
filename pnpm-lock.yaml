@@ -4,6 +4,9 @@ dependencies:
   '@solid-primitives/deep':
     specifier: ^0.0.102
     version: 0.0.102(solid-js@1.7.3)
+  '@solid-primitives/map':
+    specifier: ^0.4.3
+    version: registry.npmjs.org/@solid-primitives/map@0.4.3(solid-js@1.7.3)
 
 devDependencies:
   '@solid-primitives/scheduled':
@@ -3331,6 +3334,18 @@ packages:
       fastq: registry.npmjs.org/fastq@1.15.0
     dev: true
 
+  registry.npmjs.org/@solid-primitives/map@0.4.3(solid-js@1.7.3):
+    resolution: {integrity: sha512-9cpa8MjhLNg+PTVQaIhDUuc192kXoyIAbSCGNTxjzqq7u4OwakhvZlt4C3rIkvLX6yThNlC4IBhOnOSpos5DQA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@solid-primitives/map/-/map-0.4.3.tgz}
+    id: registry.npmjs.org/@solid-primitives/map/0.4.3
+    name: '@solid-primitives/map'
+    version: 0.4.3
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/trigger': registry.npmjs.org/@solid-primitives/trigger@1.0.5(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
   registry.npmjs.org/@solid-primitives/scheduled@1.3.2(solid-js@1.7.3):
     resolution: {integrity: sha512-2rDCyYNjI9zBqpdmJG8sN8h90gbe2hSqRdj1OMmKp3qEbKVCrXXswLmrbBuNBi/uow6f8AHR9uheb7LWQ3ojcw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@solid-primitives/scheduled/-/scheduled-1.3.2.tgz}
     id: registry.npmjs.org/@solid-primitives/scheduled/1.3.2
@@ -3341,6 +3356,29 @@ packages:
     dependencies:
       solid-js: 1.7.3
     dev: true
+
+  registry.npmjs.org/@solid-primitives/trigger@1.0.5(solid-js@1.7.3):
+    resolution: {integrity: sha512-NAnLYmUFPvJoH05qBf90IEcSTROM+woFdqcGgGmlcYcewewLNLIuJDB69CvPvM+O9yHvRk7UXcpapV25iXcoDQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@solid-primitives/trigger/-/trigger-1.0.5.tgz}
+    id: registry.npmjs.org/@solid-primitives/trigger/1.0.5
+    name: '@solid-primitives/trigger'
+    version: 1.0.5
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      '@solid-primitives/utils': registry.npmjs.org/@solid-primitives/utils@6.1.0(solid-js@1.7.3)
+      solid-js: 1.7.3
+    dev: false
+
+  registry.npmjs.org/@solid-primitives/utils@6.1.0(solid-js@1.7.3):
+    resolution: {integrity: sha512-uTikKFrq33UO+MnKt2WzZr9WYbQe5YX58ytGkL+29DL6o0pZs1wrICbd4ymzSm8azqzMcQqEQOL3HLWjuv9tLw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@solid-primitives/utils/-/utils-6.1.0.tgz}
+    id: registry.npmjs.org/@solid-primitives/utils/6.1.0
+    name: '@solid-primitives/utils'
+    version: 6.1.0
+    peerDependencies:
+      solid-js: ^1.6.12
+    dependencies:
+      solid-js: 1.7.3
+    dev: false
 
   registry.npmjs.org/@subframe7536/eslint-config@0.1.6(eslint@8.33.0)(typescript@5.0.4):
     resolution: {integrity: sha512-mr16p6MhpTiOHtI5Id2sqwX29HahGmhSnOJKe0PkQlwsdCzlZWFNBMmSXw8PLkC644IcCgVXU0kZvHhj/mqYrg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@subframe7536/eslint-config/-/eslint-config-0.1.6.tgz}

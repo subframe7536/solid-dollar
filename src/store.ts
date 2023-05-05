@@ -7,6 +7,8 @@ import type { SetStoreFunction } from 'solid-js/store/types/store'
 
 export type BaseStore<T, R> = R & {
   store: T
+}
+export type UseStoreReturn<T, R> = BaseStore<T, R> & {
   $patch: (state: T) => void
   $reset: () => void
   $subscribe: ReturnType<typeof observable<T>>['subscribe']
@@ -16,6 +18,26 @@ export type StoreOption<T extends object, R extends ActionReturn> = {
   state: T | (() => T)
   action: ActionFunctions<T, R>
   persist?: PersistOption<T>
+}
+
+type ExtractState<T> = {
+  [K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T]
+type ExtractAction<T> = {
+  [K in keyof T]: T[K] extends Function ? K : never;
+}[keyof T]
+export function generateState<T extends object>(obj: T): BaseStore<ExtractState<T>, ExtractAction<T>> {
+  const store: Record<string, any> = {}
+  const ret: Record<string, any> = {}
+  Object.entries(obj).forEach(([key, value]) => {
+    if (typeof value === 'function') {
+      ret[key] = value
+    } else {
+      store[key] = value
+    }
+  })
+  ret.store = store
+  return ret as BaseStore<ExtractState<T>, ExtractAction<T>>
 }
 
 export type ActionFunctions<T, R> = (set: SetStoreFunction<T>) => R
@@ -71,11 +93,11 @@ export function $store<
 >(
   name: string,
   options: StoreOption<T, R>,
-): readonly [provider: ParentComponent, useStore: () => BaseStore<T, R>] {
+): readonly [provider: ParentComponent, useStore: () => UseStoreReturn<T, R>] {
   const { action, state, persist: persistOption } = options
   const initalState = typeof state === 'function' ? state() : state
   const [store, setStore] = createStore<T>(initalState, { name })
-  const ctxData: BaseStore<T, R> = {
+  const ctxData: UseStoreReturn<T, R> = {
     store,
     ...action(setStore),
     $patch: (state: T) => setStore(reconcile(state, { key: name, merge: true })),
@@ -108,7 +130,7 @@ export function $store<
     }
     return ctxData
   }
-  const ctx = createContext<BaseStore<T, R>>(ctxData, { name: `ctx_${name}` })
+  const ctx = createContext<UseStoreReturn<T, R>>(ctxData, { name: `ctx_${name}` })
 
   return [
     (props: ParentProps): JSX.Element =>
