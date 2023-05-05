@@ -17,13 +17,16 @@ describe('generateState', () => {
 
   test('store should have state properties', () => {
     expect(state.store.a).toBe(initialState.a)
+    expect(state.store.a).toBeTypeOf('string')
     expect(state.store.b).toBe(initialState.b)
+    expect(state.store.b).toBeTypeOf('number')
     expect(state.store.c).toBe(initialState.c)
+    expect(state.store.c).toBeTypeOf('boolean')
   })
 
-  test('store should not have action properties', () => {
-    expect(state.d).toBeUndefined()
-    expect(state.e).toBe(undefined)
+  test('store should have action properties', () => {
+    expect(state.d).toBeTypeOf('function')
+    expect(state.e).toBeTypeOf('function')
   })
 
   test('store should have a "store" property with state values', () => {

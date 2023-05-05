@@ -20,24 +20,20 @@ export type StoreOption<T extends object, R extends ActionReturn> = {
   persist?: PersistOption<T>
 }
 
-type ExtractState<T> = {
-  [K in keyof T]: T[K] extends Function ? never : K;
-}[keyof T]
-type ExtractAction<T> = {
-  [K in keyof T]: T[K] extends Function ? K : never;
-}[keyof T]
+type ExtractState<T> = { [K in keyof T]: Exclude<T[K], Function> }
+type ExtractAction<T> = { [K in keyof T]: T[K] extends Function ? T[K] : never }
 export function generateState<T extends object>(obj: T): BaseStore<ExtractState<T>, ExtractAction<T>> {
-  const store: Record<string, any> = {}
-  const ret: Record<string, any> = {}
+  const store = {} as ExtractState<T>
+  const ret = {} as BaseStore<ExtractState<T>, ExtractAction<T>>
   Object.entries(obj).forEach(([key, value]) => {
     if (typeof value === 'function') {
-      ret[key] = value
+      ret[key as keyof T] = value
     } else {
-      store[key] = value
+      store[key as keyof T] = value
     }
   })
   ret.store = store
-  return ret as BaseStore<ExtractState<T>, ExtractAction<T>>
+  return ret
 }
 
 export type ActionFunctions<T, R> = (set: SetStoreFunction<T>) => R
