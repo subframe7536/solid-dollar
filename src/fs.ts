@@ -1,3 +1,7 @@
+/// <reference path="../node_modules/@types/wicg-file-system-access/index.d.ts" />
+
+import { ReactiveMap } from '@solid-primitives/map'
+import { batch } from 'solid-js'
 import { $ } from './signal'
 
 interface WebFsHandleNode {
@@ -8,7 +12,7 @@ interface WebFsHandleNode {
 export type WebFile = {
   /**
    * relative dir path of root exclude `.`, sep: `/`
-  */
+   */
   dir: string
   name: string
   /**
@@ -24,6 +28,7 @@ export type WebFile = {
    * set to current date when fail to get file
    */
   modifiedTime: Date
+  instance: File | undefined
 }
 function parseFilename(filename: string) {
   const match = /.(\.[^./]+)$/.exec(filename)
@@ -31,17 +36,33 @@ function parseFilename(filename: string) {
   const base = ext ? filename.slice(0, -ext.length) : filename
   return { base, ext }
 }
-async function parseFile(dir: string[], handle: FileSystemFileHandle, addTime?: boolean): Promise<WebFile> {
+
+function getDir(path: string) {
+  const pathArray = path.split('/')
+  const lastElement = pathArray.pop() ?? ''
+  if (lastElement === '') {
+    return pathArray.pop()
+  }
+  return pathArray.join('/')
+}
+
+async function parseFile(
+  dir: string[],
+  handle: FileSystemFileHandle,
+  addTime?: boolean,
+): Promise<WebFile> {
   const name = dir[dir.length - 1]
   dir.pop()
 
   let lastModified
   let size = 0
+  let instance
   try {
     const fileInfo = await handle.getFile()
     lastModified = fileInfo.lastModified
     size = fileInfo.size
-  } catch (error) { }
+    instance = fileInfo
+  } catch (error) {}
 
   const { base, ext } = parseFilename(name)
   const ret: WebFile = {
@@ -50,18 +71,32 @@ async function parseFile(dir: string[], handle: FileSystemFileHandle, addTime?: 
     name: base,
     ext,
     size,
+    instance,
   }
   if (addTime) {
     ret.addTime = new Date()
   }
   return ret
 }
+type FileExtensions = string[] | RegExp
 
 async function buildWebFsHandleNodeTree(
   handle: FileSystemHandle,
-  extensions?: (string | RegExp)[],
+  extensions?: string[] | RegExp,
 ): Promise<WebFsHandleNode> {
-  async function build(handle: FileSystemHandle, path: string[]): Promise<WebFsHandleNode> {
+  function matchExtension(filename: string): boolean {
+    if (!extensions) {
+      return true
+    }
+    if (Array.isArray(extensions)) {
+      return extensions.some(ext => filename.endsWith(`.${ext}`))
+    }
+    return extensions.test(filename)
+  }
+  async function build(
+    handle: FileSystemHandle,
+    path: string[],
+  ): Promise<WebFsHandleNode> {
     const node: WebFsHandleNode = {
       handle,
       path: [...path, handle.name],
@@ -71,10 +106,7 @@ async function buildWebFsHandleNodeTree(
       const entries = (handle as FileSystemDirectoryHandle).entries()
       node.children = []
       for await (const entry of entries) {
-        const isValidFile = extensions
-          ? extensions.some(ext => entry[0].endsWith(`.${ext}`))
-          : true
-        isValidFile && node.children.push(await build(entry[1], node.path))
+        matchExtension(entry[0]) && node.children.push(await build(entry[1], node.path))
       }
     }
 
@@ -85,10 +117,12 @@ async function buildWebFsHandleNodeTree(
 
 async function walkTree(
   root: FileSystemHandle | WebFsHandleNode,
-  extensions?: (string | RegExp)[],
+  handleMap: Map<string, FileSystemHandle>,
+  extensions?: string[] | RegExp,
   addTime?: boolean,
-): Promise<WebFile[]> {
+) {
   async function walk(node: WebFsHandleNode): Promise<WebFile[]> {
+    handleMap.set(node.path.join('/'), node.handle)
     if (node.handle.kind === 'file') {
       const fileHandle = node.handle as FileSystemFileHandle
       const webFile = await parseFile(node.path, fileHandle, addTime)
@@ -103,34 +137,60 @@ async function walkTree(
     )
     return childrenFiles.flat()
   }
-  return walk('path' in root ? root : await buildWebFsHandleNodeTree(root, extensions))
+  const _root = 'path' in root ? root : await buildWebFsHandleNodeTree(root, extensions)
+  return {
+    nodeTree: _root,
+    handleMap,
+    fileArray: await walk(_root),
+  }
 }
-class UnSupportedError extends Error { }
+class UnSupportedError extends Error {}
 export function isSupportFs() {
   return typeof globalThis.showDirectoryPicker === 'function'
 }
+
 /**
  * @param extensions file extension(without dot)
  * @throws {@link UnSupportedError}
  */
-export async function $fs(
-  extensions?: (string | RegExp)[],
-  addTime?: boolean,
-) {
+export function $fs(extensions?: FileExtensions, addTime?: boolean) {
   if (!isSupportFs) {
     throw new UnSupportedError()
   }
-  let dir = await globalThis.showDirectoryPicker()
-  const nodeTree = $(await buildWebFsHandleNodeTree(dir, extensions ?? []))
-  let fileArray = await walkTree(nodeTree(), extensions, addTime)
-  const buildTree = async () => {
-    dir = await global.showDirectoryPicker()
-    nodeTree(await buildWebFsHandleNodeTree(dir, extensions ?? []))
+  const _extensions = extensions
+  const _addTime = addTime
+  let _nodeTree: WebFsHandleNode | undefined
+  const _root = $<FileSystemDirectoryHandle>()
+  const _fileArray = $<WebFile[]>()
+  const _handleMap = new ReactiveMap<string, FileSystemHandle>()
+
+  async function reload(
+    root?: FileSystemDirectoryHandle,
+    extensions?: FileExtensions,
+    addTime?: boolean,
+  ) {
+    const needRefetch = root !== undefined || _root() === undefined
+    if (needRefetch) {
+      _root.set(root ?? (await window.showDirectoryPicker()))
+    }
+    batch(async () => {
+      const { nodeTree, fileArray } = await walkTree(
+        _root()!,
+        _handleMap,
+        extensions ?? _extensions,
+        addTime ?? _addTime,
+      )
+      _nodeTree = nodeTree
+      _fileArray.set(fileArray)
+    })
+
+    return _root()!
   }
 
   return {
-    root: dir,
-    tree: nodeTree,
-    buildTree,
+    root: _root,
+    fileArray: _fileArray,
+    handleMap: _handleMap,
+    reload,
   }
 }

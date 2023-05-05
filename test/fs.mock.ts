@@ -120,7 +120,7 @@ export class FileSystemDirectoryHandle extends FileSystemHandle {
 export function createFromObject(obj: ObjectFileSystem | string,
   name?: string): FileSystemHandle {
   if (name === undefined) {
-    return createFromObject(obj, 'filesystem')
+    return createFromObject(obj, '$fs mock')
   } else if (typeof obj === 'string') {
     return new FileSystemFileHandle(name, obj)
   } else {

@@ -4,6 +4,8 @@ import './fs.mock'
 
 describe('test $fs', () => {
   test('test init', async () => {
-    console.log(await $fs(['ts']))
+    const { fileArray, handleMap, root } = await $fs(['ts'])
+    await Promise.resolve()
+    console.log(root(), JSON.stringify(fileArray), JSON.stringify(handleMap))
   })
 })
