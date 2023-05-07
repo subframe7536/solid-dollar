@@ -1,6 +1,6 @@
 # solid-dollar
 
-tools for solid.js
+hooks for solid.js
 
 ## `$`/`$signal`
 
