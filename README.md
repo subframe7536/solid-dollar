@@ -15,7 +15,7 @@ console.log(data(1)) // 1
 
 console.log(data()) // 1
 
-console.log(data.source) // source signal
+console.log(data.signal) // original signal
 ```
 
 ## `$res`/`$resource`
