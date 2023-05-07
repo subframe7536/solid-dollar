@@ -3,7 +3,7 @@ import type { FlowComponent, JSX, ParentComponent, ParentProps } from 'solid-js'
 import { createComponent, createContext, createEffect, observable, on, onMount, useContext } from 'solid-js'
 
 import { createStore, reconcile, unwrap } from 'solid-js/store'
-import type { SetStoreFunction } from 'solid-js/store/types/store'
+import type { SetStoreFunction, Store } from 'solid-js/store/types/store'
 
 export type BaseStore<T, R> = R & {
   store: T
@@ -19,12 +19,23 @@ export type StoreOption<T extends object, R extends ActionReturn> = {
   action: ActionFunctions<T, R>
   persist?: PersistOption<T>
 }
+export type ObjectStore<
+  Store extends object,
+  Getter extends GetterReturn,
+  Action extends ActionReturn,
+> = {
+  state: Store | (() => Store)
+  getter?: GetterFunctions<Store, Getter>
+  action?: ActionFunctions<Store, Action>
+  persist?: PersistOption<Store>
+}
 
 type ExtractState<T> = { [K in keyof T]: Exclude<T[K], Function> }
 type ExtractAction<T> = { [K in keyof T]: T[K] extends Function ? T[K] : never }
-export function generateState<T extends object>(obj: T): BaseStore<ExtractState<T>, ExtractAction<T>> {
+type FunctionStore<T> = BaseStore<ExtractState<T>, ExtractAction<T>>
+export function generateState<T extends object>(obj: T): FunctionStore<T> {
   const store = {} as ExtractState<T>
-  const ret = {} as BaseStore<ExtractState<T>, ExtractAction<T>>
+  const ret = {} as FunctionStore<T>
   Object.entries(obj).forEach(([key, value]) => {
     if (typeof value === 'function') {
       ret[key as keyof T] = value
@@ -38,6 +49,8 @@ export function generateState<T extends object>(obj: T): BaseStore<ExtractState<
 
 export type ActionFunctions<T, R> = (set: SetStoreFunction<T>) => R
 export type ActionReturn = Record<string, (...args: any[]) => void>
+export type GetterFunctions<T, R> = (state: Store<T>) => R
+export type GetterReturn = ActionReturn
 
 export type PersistOption<T extends object> =
 | boolean
@@ -83,6 +96,16 @@ export function normalizePersistOption<T extends object>(
       }
 }
 
+export function getfunctionStoreCtxData<
+  T extends object = {},
+>(
+  name: string,
+  func: (set?: SetStoreFunction<ExtractState<T>>) => T,
+) {
+  const { store } = generateState(func())
+  const [state, setState] = createStore(store, { name })
+  return { ...func(setState), store: state }
+}
 export function $store<
   T extends object = {},
   R extends ActionReturn = {},
