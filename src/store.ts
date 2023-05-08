@@ -22,6 +22,7 @@ export type StoreSetup<
   state: Store | (() => Store)
   getter?: GetterFunctions<Store, Getter>
   action?: ActionFunctions<Store, Action>
+  persist?: PersistOption<Store>
 }
 
 export type ActionFunctions<T, R> = (set: SetStoreFunction<T>) => R
@@ -95,9 +96,8 @@ export function $store<
 >(
   name: string,
   setup: StoreSetup<T, Getter, Action>,
-  options?: { persist: PersistOption<T> },
 ): readonly [provider: ParentComponent, useStore: () => UseStoreReturn<T, Getter, Action>] {
-  const { action = () => ({}), getter = () => ({}), state } = setup
+  const { action = () => ({}), getter = () => ({}), state, persist } = setup
   const initalState = typeof state === 'function' ? state() : state
   const [store, setStore] = createStore<T>(initalState, { name })
   const ctxData = {
@@ -110,7 +110,7 @@ export function $store<
   } as UseStoreReturn<T, Getter, Action>
 
   const setupContext = () => {
-    const option = normalizePersistOption(name, options?.persist)
+    const option = normalizePersistOption(name, persist)
     if (option) {
       const { debug, key, serializer: { deserialize, serialize }, storage } = option
       onMount(() => {

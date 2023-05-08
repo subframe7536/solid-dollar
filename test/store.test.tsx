@@ -93,7 +93,6 @@ describe('test store', () => {
             set('test', test => test + num)
           },
         }),
-      }, {
         persist: {
           enable: true,
           storage: {
@@ -106,8 +105,7 @@ describe('test store', () => {
           },
           debug: true,
         },
-      },
-      )
+      })
       const { store, double, plus, doubleValue } = useTestStore()
       expect(store.test).toBe(1)
       expect(doubleValue()).toBe(2)
@@ -159,7 +157,6 @@ describe('test store', () => {
         increment: () => set('count', n => n + 1),
         decrement: () => set('count', n => n - 1),
       }),
-    }, {
       persist: {
         enable: true,
         storage: {

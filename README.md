@@ -37,10 +37,19 @@ support for persist store. inspired by `@solid-primitives/context` and `pinia`
 
 ```tsx
 const [Provider, useStore] = $store('test', {
-  state: initialState,
+  state: { test: 1 },
+  getter: state => ({
+    doubleValue() {
+      return state.test * 2
+    },
+  }),
   action: set => ({
-    increment: () => set('count', n => n + 1),
-    decrement: () => set('count', n => n - 1),
+    double() {
+      set('test', test => test * 2)
+    },
+    plus(num: number) {
+      set('test', test => test + num)
+    },
   }),
   persist: {
     enable: true,
@@ -48,13 +57,13 @@ const [Provider, useStore] = $store('test', {
     debug: true,
   },
 })
-const { store, decrement, increment, $patch, $reset, $subscribe } = useStore()
+const { store, double, plus, $patch, $reset, $subscribe } = useStore()
 render(() => (
   <Provider>
     <div>
       <p>{store.count}</p>
-      <button onClick={increment}>Increment</button>
-      <button onClick={decrement}>Decrement</button>
+      <button onClick={double}>double</button>
+      <button onClick={() => plus(2)}>plus 2</button>
     </div>
   </Provider>
 ))
