@@ -115,7 +115,7 @@ async function buildWebFsHandleNodeTree(
   return build(handle, [])
 }
 
-async function walkTree(
+async function walkWebFsNodeTree(
   root: FileSystemHandle | WebFsHandleNode,
   handleMap: Map<string, FileSystemHandle>,
   extensions?: string[] | RegExp,
@@ -169,19 +169,18 @@ export function $fs(extensions?: FileExtensions, addTime?: boolean) {
     extensions?: FileExtensions,
     addTime?: boolean,
   ) {
-    const needRefetch = root !== undefined || _root() === undefined
-    if (needRefetch) {
-      _root.set(root ?? (await window.showDirectoryPicker()))
+    if (root !== undefined || _root() === undefined) {
+      _root(root ?? (await window.showDirectoryPicker()))
     }
     batch(async () => {
-      const { nodeTree, fileArray } = await walkTree(
+      const { nodeTree, fileArray } = await walkWebFsNodeTree(
         _root()!,
         _handleMap,
         extensions ?? _extensions,
         addTime ?? _addTime,
       )
       _nodeTree = nodeTree
-      _fileArray.set(fileArray)
+      _fileArray(fileArray)
     })
 
     return _root()!
