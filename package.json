@@ -44,8 +44,7 @@
     "test:w": "vitest",
     "lint": "eslint --cache --fix .",
     "typecheck": "tsc --noEmit",
-    "release": "bumpp",
-    "publish": "npm publish"
+    "release": "bumpp"
   },
   "devDependencies": {
     "@solid-primitives/scheduled": "^1.3.2",
