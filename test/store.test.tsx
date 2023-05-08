@@ -2,63 +2,11 @@ import { createRoot } from 'solid-js'
 import { cleanup, fireEvent, render } from '@solidjs/testing-library'
 import { describe, expect, test } from 'vitest'
 import { $Providers, $store } from '../src'
-import { generateState, normalizePersistOption } from '../src/store'
+import { normalizePersistOption } from '../src/store'
 
-describe('generateState', () => {
-  const initialState = {
-    a: 'hello',
-    b: 42,
-    c: true,
-    d: () => { console.log('hello world!') },
-    e: async () => { console.log('async hello world!') },
-  }
-
-  const state = generateState(initialState)
-
-  test('store should have state properties', () => {
-    expect(state.store.a).toBe(initialState.a)
-    expect(state.store.a).toBeTypeOf('string')
-    expect(state.store.b).toBe(initialState.b)
-    expect(state.store.b).toBeTypeOf('number')
-    expect(state.store.c).toBe(initialState.c)
-    expect(state.store.c).toBeTypeOf('boolean')
-  })
-
-  test('store should have action properties', () => {
-    expect(state.d).toBeTypeOf('function')
-    expect(state.e).toBeTypeOf('function')
-  })
-
-  test('store should have a "store" property with state values', () => {
-    expect(state.store).toEqual({
-      a: initialState.a,
-      b: initialState.b,
-      c: initialState.c,
-    })
-  })
-
-  test('store should not have a "store" property with action values', () => {
-    expect((state.store as any).d).toBeUndefined()
-    expect((state.store as any).e).toBeUndefined()
-  })
-})
 describe('test normalizePersistOption()', () => {
   test('returns undefined with undefined option', () => {
     expect(normalizePersistOption('testUndefined', undefined)).toBeUndefined()
-  })
-  test('returns normalized options with true option', () => {
-    expect(normalizePersistOption('testTrue', true)).toEqual({
-      debug: false,
-      key: 'testTrue',
-      serializer: {
-        serialize: expect.any(Function),
-        deserialize: expect.any(Function),
-      },
-      storage: localStorage,
-    })
-  })
-  test('returns undefined with false option', () => {
-    expect(normalizePersistOption('testFalse', false)).toBeUndefined()
   })
   test('returns normalized options with enable option set to true', () => {
     expect(normalizePersistOption('testEnable', { enable: true })).toEqual({
@@ -132,11 +80,20 @@ describe('test store', () => {
     createRoot(() => {
       const [, useTestStore] = $store('test', {
         state: { test: 1 },
+        getter: state => ({
+          doubleValue() {
+            return state.test * 2
+          },
+        }),
         action: set => ({
           double() {
             set('test', test => test * 2)
           },
+          plus(num: number) {
+            set('test', test => test + num)
+          },
         }),
+      }, {
         persist: {
           enable: true,
           storage: {
@@ -149,11 +106,17 @@ describe('test store', () => {
           },
           debug: true,
         },
-      })
-      const { store, double } = useTestStore()
+      },
+      )
+      const { store, double, plus, doubleValue } = useTestStore()
       expect(store.test).toBe(1)
+      expect(doubleValue()).toBe(2)
       double()
       expect(store.test).toBe(2)
+      expect(doubleValue()).toBe(4)
+      plus(200)
+      expect(store.test).toBe(202)
+      expect(doubleValue()).toBe(404)
     })
   })
   test('should create a Solid store provider and hook', () => {
@@ -196,6 +159,7 @@ describe('test store', () => {
         increment: () => set('count', n => n + 1),
         decrement: () => set('count', n => n - 1),
       }),
+    }, {
       persist: {
         enable: true,
         storage: {

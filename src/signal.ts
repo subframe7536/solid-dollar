@@ -21,8 +21,8 @@ export function isSignal<T>(val: unknown): val is Signal<T> {
 export function isSignalObject<T>(val: unknown): val is SignalObject<T> {
   return (
     typeof val === 'function'
-    && 'source' in val
-    && isSignal(val.source)
+    && 'signal' in val
+    && isSignal(val.signal)
   )
 }
 

@@ -1,25 +1,20 @@
 import { deepTrack } from '@solid-primitives/deep'
 import type { FlowComponent, JSX, ParentComponent, ParentProps } from 'solid-js'
-import { createComponent, createContext, createEffect, observable, on, onMount, useContext } from 'solid-js'
+import { batch, createComponent, createContext, createEffect, createMemo, observable, on, onMount, untrack, useContext } from 'solid-js'
 
 import { createStore, reconcile, unwrap } from 'solid-js/store'
 import type { SetStoreFunction, Store } from 'solid-js/store/types/store'
 
-export type BaseStore<T, R> = R & {
+export type BaseStore<T, S, R> = R & S & {
   store: T
 }
-export type UseStoreReturn<T, R> = BaseStore<T, R> & {
+export type UseStoreReturn<T, S, R> = BaseStore<T, S, R> & {
   $patch: (state: T) => void
   $reset: () => void
   $subscribe: ReturnType<typeof observable<T>>['subscribe']
 }
 
-export type StoreOption<T extends object, R extends ActionReturn> = {
-  state: T | (() => T)
-  action: ActionFunctions<T, R>
-  persist?: PersistOption<T>
-}
-export type ObjectStore<
+export type StoreSetup<
   Store extends object,
   Getter extends GetterReturn,
   Action extends ActionReturn,
@@ -27,24 +22,6 @@ export type ObjectStore<
   state: Store | (() => Store)
   getter?: GetterFunctions<Store, Getter>
   action?: ActionFunctions<Store, Action>
-  persist?: PersistOption<Store>
-}
-
-type ExtractState<T> = { [K in keyof T]: Exclude<T[K], Function> }
-type ExtractAction<T> = { [K in keyof T]: T[K] extends Function ? T[K] : never }
-type FunctionStore<T> = BaseStore<ExtractState<T>, ExtractAction<T>>
-export function generateState<T extends object>(obj: T): FunctionStore<T> {
-  const store = {} as ExtractState<T>
-  const ret = {} as FunctionStore<T>
-  Object.entries(obj).forEach(([key, value]) => {
-    if (typeof value === 'function') {
-      ret[key as keyof T] = value
-    } else {
-      store[key as keyof T] = value
-    }
-  })
-  ret.store = store
-  return ret
 }
 
 export type ActionFunctions<T, R> = (set: SetStoreFunction<T>) => R
@@ -53,17 +30,15 @@ export type GetterFunctions<T, R> = (state: Store<T>) => R
 export type GetterReturn = ActionReturn
 
 export type PersistOption<T extends object> =
-| boolean
-| Partial<NormalizedPersistOption<T>> & {
-  enable: boolean
-}
+  Partial<NormalizedPersistOption<T>> & {
+    enable: boolean
+  }
 export type NormalizedPersistOption<T extends object> = {
   storage: StorageLike
   key: string
   serializer: Serializer<T>
   debug: boolean
 }
-export type N<T extends object> = NormalizedPersistOption<T>
 export type StorageLike = Pick<Storage, 'getItem' | 'setItem'>
 interface Serializer<T> {
   /**
@@ -83,49 +58,59 @@ export function normalizePersistOption<T extends object>(
   name: string,
   option: PersistOption<T> | undefined,
 ): NormalizedPersistOption<T> | undefined {
-  return (!option || (typeof option === 'object' && !option.enable))
+  return (!option || !option.enable)
     ? undefined
     : {
-        debug: (option as N<T>)?.debug ?? false,
-        key: (option as N<T>)?.key ?? name,
+        debug: option?.debug ?? false,
+        key: option?.key ?? name,
         serializer: {
-          serialize: (option as N<T>)?.serializer?.serialize ?? JSON.stringify,
-          deserialize: (option as N<T>)?.serializer?.deserialize ?? JSON.parse,
+          serialize: option?.serializer?.serialize ?? JSON.stringify,
+          deserialize: option?.serializer?.deserialize ?? JSON.parse,
         },
-        storage: (option as N<T>)?.storage ?? localStorage,
+        storage: option?.storage ?? localStorage,
       }
 }
 
-export function getfunctionStoreCtxData<
-  T extends object = {},
->(
-  name: string,
-  func: (set?: SetStoreFunction<ExtractState<T>>) => T,
-) {
-  const { store } = generateState(func())
-  const [state, setState] = createStore(store, { name })
-  return { ...func(setState), store: state }
+function parseFunctions<T extends object>(functions: T, parseFn: (fn: () => any) => any) {
+  const actions: Record<string, () => any> = {}
+  for (const [name, fn] of Object.entries(functions)) {
+    actions[name] = parseFn(fn)
+  }
+  return actions
+}
+
+function parseGetter<T extends object>(functions: T) {
+  return parseFunctions(functions, fn => createMemo(() => fn()))
+}
+
+function parseAction<T extends object>(functions: T) {
+  return parseFunctions(functions, (fn: (...args: any) => any) => {
+    return (...args: any) => batch(() => untrack(() => fn(...args)))
+  })
 }
 export function $store<
   T extends object = {},
-  R extends ActionReturn = {},
+  Getter extends GetterReturn = {},
+  Action extends ActionReturn = {},
 >(
   name: string,
-  options: StoreOption<T, R>,
-): readonly [provider: ParentComponent, useStore: () => UseStoreReturn<T, R>] {
-  const { action, state, persist: persistOption } = options
+  setup: StoreSetup<T, Getter, Action>,
+  options?: { persist: PersistOption<T> },
+): readonly [provider: ParentComponent, useStore: () => UseStoreReturn<T, Getter, Action>] {
+  const { action = () => ({}), getter = () => ({}), state } = setup
   const initalState = typeof state === 'function' ? state() : state
   const [store, setStore] = createStore<T>(initalState, { name })
-  const ctxData: UseStoreReturn<T, R> = {
+  const ctxData = {
     store,
-    ...action(setStore),
+    ...parseGetter(getter(store)),
+    ...parseAction(action(setStore)),
     $patch: (state: T) => setStore(reconcile(state, { key: name, merge: true })),
     $reset: () => setStore(initalState),
     $subscribe: observable(() => deepTrack(store)).subscribe,
-  }
+  } as UseStoreReturn<T, Getter, Action>
 
   const setupContext = () => {
-    const option = normalizePersistOption(name, persistOption)
+    const option = normalizePersistOption(name, options?.persist)
     if (option) {
       const { debug, key, serializer: { deserialize, serialize }, storage } = option
       onMount(() => {
@@ -149,7 +134,7 @@ export function $store<
     }
     return ctxData
   }
-  const ctx = createContext<UseStoreReturn<T, R>>(ctxData, { name: `ctx_${name}` })
+  const ctx = createContext<UseStoreReturn<T, Getter, Action>>(ctxData, { name: `ctx_${name}` })
 
   return [
     (props: ParentProps): JSX.Element =>
