@@ -10,3 +10,6 @@ export type { PersistOption, StoreSetup } from './store'
 
 export { $effect, $watch } from './effect'
 export type { WatchCallback, EffectOption } from './effect'
+
+export { $fs, isSupportFs } from './fs'
+export type { WebFile } from './fs'

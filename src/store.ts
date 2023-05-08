@@ -73,7 +73,7 @@ export function normalizePersistOption<T extends object>(
 }
 
 function parseFunctions<T extends object>(functions: T, parseFn: (fn: () => any) => any) {
-  const actions: Record<string, () => any> = {}
+  const actions: Record<string, any> = {}
   for (const [name, fn] of Object.entries(functions)) {
     actions[name] = parseFn(fn)
   }
@@ -85,9 +85,9 @@ function parseGetter<T extends object>(functions: T) {
 }
 
 function parseAction<T extends object>(functions: T) {
-  return parseFunctions(functions, (fn: (...args: any) => any) => {
-    return (...args: any) => batch(() => untrack(() => fn(...args)))
-  })
+  return parseFunctions(functions, (fn: (...args: any) => any) =>
+    (...args: any) => batch(() => untrack(() => fn(...args))),
+  )
 }
 export function $store<
   T extends object = {},
