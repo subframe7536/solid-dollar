@@ -122,7 +122,10 @@ async function walkWebFsNodeTree(
   addTime?: boolean,
 ) {
   async function walk(node: WebFsHandleNode): Promise<WebFile[]> {
-    handleMap.set(node.path.join('/'), node.handle)
+    const combinedPath = node.path.join('/')
+    if (!handleMap.has(combinedPath)) {
+      handleMap.set(combinedPath, node.handle)
+    }
     if (node.handle.kind === 'file') {
       const fileHandle = node.handle as FileSystemFileHandle
       const webFile = await parseFile(node.path, fileHandle, addTime)
@@ -140,7 +143,6 @@ async function walkWebFsNodeTree(
   const _root = 'path' in root ? root : await buildWebFsHandleNodeTree(root, extensions)
   return {
     nodeTree: _root,
-    handleMap,
     fileArray: await walk(_root),
   }
 }
@@ -188,6 +190,7 @@ export function $fs(extensions?: FileExtensions, addTime?: boolean) {
 
   return {
     root: _root,
+    nodeTree: _nodeTree,
     fileArray: _fileArray,
     handleMap: _handleMap,
     reload,
