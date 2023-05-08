@@ -120,6 +120,10 @@ t('deep.t')
 locale('testDict')
 ```
 
-## todo
+## `$fs`
 
-- [ ] `$fs` [this](https://github.com/minht11/local-music-pwa/blob/main/src/helpers/file-system.ts) and [this](https://github.com/solidjs-community/solid-primitives/blob/main/packages/filesystem/dev/index.tsx)
+FileSystem Access Api
+
+```ts
+
+```

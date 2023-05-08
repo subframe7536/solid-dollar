@@ -4,8 +4,12 @@ import './fs.mock'
 
 describe('test $fs', () => {
   test('test init', async () => {
-    const { fileArray, handleMap, root } = await $fs(['ts'])
-    await Promise.resolve()
-    console.log(root(), JSON.stringify(fileArray), JSON.stringify(handleMap))
+    const { fileArray, nodeTree, handleMap, root, fetchTree } = $fs(['ts'])
+    await fetchTree()
+    console.log(nodeTree)
+    for await (const entry of root()!.entries()) {
+      console.log(entry[0], entry[1].kind)
+    }
+    console.log(JSON.stringify(fileArray()), JSON.stringify(handleMap))
   })
 })

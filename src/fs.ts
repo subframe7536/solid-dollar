@@ -166,7 +166,7 @@ export function $fs(extensions?: FileExtensions, addTime?: boolean) {
   const _fileArray = $<WebFile[]>()
   const _handleMap = new ReactiveMap<string, FileSystemHandle>()
 
-  async function reload(
+  async function fetchTree(
     root?: FileSystemDirectoryHandle,
     extensions?: FileExtensions,
     addTime?: boolean,
@@ -193,6 +193,6 @@ export function $fs(extensions?: FileExtensions, addTime?: boolean) {
     nodeTree: _nodeTree,
     fileArray: _fileArray,
     handleMap: _handleMap,
-    reload,
+    fetchTree,
   }
 }
