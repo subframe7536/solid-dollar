@@ -1,4 +1,6 @@
 import { describe, expect, test } from 'vitest'
+import { testEffect } from '@solidjs/testing-library'
+import { createEffect, on } from 'solid-js'
 import { $i18n } from '../src/i18n'
 
 describe('i18n', () => {
@@ -20,6 +22,12 @@ describe('i18n', () => {
   const { t, availiableLocales, locale } = $tr()
   test('default', () => {
     expect(availiableLocales).toStrictEqual(['testDict', 'testDict1'])
+    testEffect((done) => {
+      createEffect(on(() => t('tt'), () => {
+        expect(t('tt')).toBe('2')
+        done()
+      }, { defer: true }))
+    })
     const dest = t('deep.t')
     expect(dest).toBe(1)
     locale('testDict1')
