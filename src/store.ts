@@ -89,6 +89,13 @@ function parseAction<T extends object>(functions: T) {
     (...args: any) => batch(() => untrack(() => fn(...args))),
   )
 }
+
+/**
+ * create state
+ * @param name store name
+ * @param setup store setup function
+ * @returns provider and hooks
+ */
 export function $store<
   T extends object = {},
   Getter extends GetterReturn = {},
