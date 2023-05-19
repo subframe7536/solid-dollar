@@ -14,26 +14,15 @@
     "url": "git+https://github.com/subframe7536/solid-dollar.git"
   },
   "bugs": "https://github.com/subframe7536/solid-dollar/issues",
-  "keywords": [],
-  "sideEffects": false,
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "require": "./dist/index.cjs",
-      "import": "./dist/index.mjs"
-    }
-  },
+  "keywords": [
+    "solidjs",
+    "hooks",
+    "file system access",
+    "state"
+  ],
   "main": "./dist/index.mjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "*": [
-        "./dist/*",
-        "./dist/index.d.ts"
-      ]
-    }
-  },
   "files": [
     "dist"
   ],
