@@ -13,3 +13,5 @@ export type { WatchCallback, EffectOption } from './effect'
 
 export { $fs, isSupportFs } from './fs'
 export type { WebFile } from './fs'
+
+export { $idle } from './idle'
