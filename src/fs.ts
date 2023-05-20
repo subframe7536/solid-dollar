@@ -106,7 +106,10 @@ async function buildWebFsHandleNodeTree(
       const entries = (handle as FileSystemDirectoryHandle).entries()
       node.children = []
       for await (const entry of entries) {
-        matchExtension(entry[0]) && node.children.push(await build(entry[1], node.path))
+        if (matchExtension(entry[0])) {
+          const child = await build(entry[1], node.path)
+          child && node.children.push(child)
+        }
       }
     }
 
@@ -153,6 +156,7 @@ export function isSupportFs() {
 
 /**
  * @param extensions file extension(without dot)
+ * @param addTime add to current date to file when build tree
  * @throws {@link UnSupportedError}
  */
 export function $fs(extensions?: FileExtensions, addTime?: boolean) {
