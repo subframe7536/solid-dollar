@@ -5,7 +5,7 @@ export type { SignalObject } from './signal'
 export { $res, $resource } from './resource'
 export type { ResourceObject } from './resource'
 
-export { $store, $Providers } from './store'
+export { $store } from './store'
 export type { PersistOption, StoreSetup } from './store'
 
 export { $effect, $watch } from './effect'
@@ -15,3 +15,5 @@ export { $fs, isSupportFs } from './fs'
 export type { WebFile } from './fs'
 
 export { $idle } from './idle'
+
+export { $Provider } from './provider'

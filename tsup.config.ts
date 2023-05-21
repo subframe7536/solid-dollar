@@ -6,7 +6,6 @@ export default defineConfig({
   format: ['cjs', 'esm'],
   shims: true,
   dts: true,
-  external: ['solid-js'],
   treeshake: true,
   outExtension({ format }) {
     return {
