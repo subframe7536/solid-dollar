@@ -14,7 +14,7 @@ export function $i18n<T extends Record<string, Record<string, any>>>(
   const locale = $<keyof T>(
     defaultLocale ?? ((typeof navigator !== 'undefined' && navigator.language in availiableLocales)
       ? navigator.language
-      : Object.keys(availiableLocales)[0] ?? ''),
+      : Object.keys(availiableLocales)[0] ?? 'en'),
   )
   const ctxData = { availiableLocales, locale, t }
   function t(path: Path<T[keyof T]>) {
