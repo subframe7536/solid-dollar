@@ -1,4 +1,4 @@
-import { deepTrack } from '@solid-primitives/deep'
+import { trackStore } from '@solid-primitives/deep'
 import type { FlowComponent, JSX, ParentComponent, ParentProps } from 'solid-js'
 import { batch, createComponent, createContext, createEffect, createMemo, observable, on, onMount, untrack, useContext } from 'solid-js'
 
@@ -113,7 +113,7 @@ export function $store<
     ...parseAction(action(setStore)),
     $patch: (state: T) => setStore(reconcile(state, { key: name, merge: true })),
     $reset: () => setStore(initalState),
-    $subscribe: observable(() => deepTrack(store)).subscribe,
+    $subscribe: observable(() => trackStore(store)).subscribe,
   } as UseStoreReturn<T, Getter, Action>
 
   const setupContext = () => {
@@ -134,7 +134,7 @@ export function $store<
           debug && console.error(`[$store - ${key}]: ${e}`)
         }
       })
-      createEffect(on(() => deepTrack(store), () => {
+      createEffect(on(() => trackStore(store), () => {
         debug && console.log(`[$store - ${key}]: update to ${JSON.stringify(store)}`)
         storage.setItem(option.key, serialize(unwrap(store)))
       }, { defer: true }))
