@@ -111,9 +111,9 @@ export function deepClone<T>(target: T): T {
  * @param setup store setup object
  */
 export function $store<
-T extends object = {},
-Getter extends GetterReturn = {},
-Action extends ActionReturn = {},
+  T extends object = {},
+  Getter extends GetterReturn = {},
+  Action extends ActionReturn = {},
 >(
   name: string,
   setup: StoreSetup<T, Getter, Action>,
