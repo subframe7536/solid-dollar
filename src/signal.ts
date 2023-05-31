@@ -6,6 +6,7 @@ export type SignalParam<T> = Parameters<typeof createSignal<T>>
 export type SignalObject<T> = {
   (): T
   (setter: Parameters<Setter<T>>[0]): T
+  set: Setter<T>
   readonly signal: Signal<T>
 }
 
@@ -38,6 +39,7 @@ export function $signal<T>(...args: [] | [Signal<T>] | SignalParam<T>) {
   const obj = (setter?: Parameters<Setter<T>>[0]) => {
     return setter ? (signal[1] as Setter<T>)(setter) : signal[0]()
   }
+  obj.set = signal[1]
   obj.signal = Object.freeze(signal)
   return obj
 }

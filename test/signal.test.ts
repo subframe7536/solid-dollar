@@ -13,6 +13,8 @@ describe('test signal', () => {
     expect(bar()).toBe(1)
     expect(bar(2)).toBe(2)
     expect(bar()).toBe(2)
+    expect(bar.set(4)).toBe(4)
+    expect(bar()).toBe(4)
     expectTypeOf(bar.signal).toBeArray()
     expectTypeOf(bar.signal[0]).toBeFunction()
     expectTypeOf(bar.signal[1]).toBeFunction()
