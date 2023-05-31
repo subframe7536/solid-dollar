@@ -58,7 +58,7 @@
   "dependencies": {
     "@solid-primitives/deep": "^0.1.0",
     "@solid-primitives/map": "^0.4.5",
-    "dot-path-value": "^0.0.10"
+    "object-standard-path": "^0.2.2"
   },
   "peerDependencies": {
     "solid-js": "^1.7.3"

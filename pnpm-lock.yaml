@@ -7,9 +7,9 @@ dependencies:
   '@solid-primitives/map':
     specifier: ^0.4.5
     version: registry.npmjs.org/@solid-primitives/map@0.4.5(solid-js@1.7.5)
-  dot-path-value:
-    specifier: ^0.0.10
-    version: registry.npmjs.org/dot-path-value@0.0.10
+  object-standard-path:
+    specifier: ^0.2.2
+    version: registry.npmjs.org/object-standard-path@0.2.2
 
 devDependencies:
   '@solid-primitives/scheduled':
@@ -3188,12 +3188,6 @@ packages:
       domhandler: registry.npmjs.org/domhandler@5.0.3
     dev: true
 
-  registry.npmjs.org/dot-path-value@0.0.10:
-    resolution: {integrity: sha512-MrVpDoFwk1xjeM0sGRuei7N3LQOylJ9iamgfxAQwPY0hPnDHL981hM/KpoQwFHMckgjZvJA0MyH7VN//ernFFA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/dot-path-value/-/dot-path-value-0.0.10.tgz}
-    name: dot-path-value
-    version: 0.0.10
-    dev: false
-
   registry.npmjs.org/dotenv@16.0.3:
     resolution: {integrity: sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/dotenv/-/dotenv-16.0.3.tgz}
     name: dotenv
@@ -5296,6 +5290,12 @@ packages:
     version: 1.1.1
     engines: {node: '>= 0.4'}
     dev: true
+
+  registry.npmjs.org/object-standard-path@0.2.2:
+    resolution: {integrity: sha512-oQKGHYd5XUvBlGcao3uUqm1x81ViDRFg8TrThn6bCxhESYJmbsvsSxSkPtZc5BofzaMOC3iwIPyEu+Hvdv+Hkw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/object-standard-path/-/object-standard-path-0.2.2.tgz}
+    name: object-standard-path
+    version: 0.2.2
+    dev: false
 
   registry.npmjs.org/object.assign@4.1.4:
     resolution: {integrity: sha512-1mxKf0e58bvyjSCtKYY4sRe9itRk3PJpquJOjeIkz885CczcI4IvJJDLPS72oowuSh+pBxUFROpX+TU++hxhZQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/object.assign/-/object.assign-4.1.4.tgz}

@@ -1,6 +1,6 @@
 import type { JSX, ParentProps } from 'solid-js'
-import type { Path } from 'dot-path-value'
-import { getByPath } from 'dot-path-value'
+import type { Path } from 'object-standard-path'
+import { pathGet } from 'object-standard-path'
 import { createComponent, createContext, useContext } from 'solid-js'
 import { $ } from './signal'
 
@@ -18,7 +18,7 @@ export function $i18n<T extends Record<string, Record<string, any>>>(
   )
   const ctxData = { availiableLocales, locale, t }
   function t(path: Path<T[keyof T]>) {
-    return getByPath(message[locale()], path)
+    return pathGet(message[locale()], path)
   }
   const ctx = createContext(ctxData)
   return {
