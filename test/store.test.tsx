@@ -91,7 +91,7 @@ describe('test store', () => {
       }),
     })
     const callback = vi.fn()
-    const { store, double, plus, doubleValue, $patch, $reset, $subscribe } = useTestStore
+    const { store, double, plus, doubleValue, $patch, $reset, $subscribe } = useTestStore()
     $subscribe(callback)
     expect(store.test).toBe(1)
     expect(doubleValue()).toBe(2)
@@ -109,6 +109,41 @@ describe('test store', () => {
     expect(doubleValue()).toBe(2)
     expect(callback).toHaveBeenCalledTimes(4)
   })
+  // test('stores outside $Providers should not be affected', () => {
+  //   const initialState = { count: 0 }
+  //   const useStore = $store('test', {
+  //     state: initialState,
+  //     action: set => ({
+  //       increment: () => set('count', n => n + 1),
+  //       decrement: () => set('count', n => n - 1),
+  //     }),
+  //   })
+  //   const { store, decrement, increment } = useStore()
+  //   const { unmount, getByTestId } = render(() => (
+  //     <div>
+  //       <p data-testid="out">{store.count}</p>
+  //       <$Providers>
+  //         <p data-testid="value">{store.count}</p>
+  //         <button data-testid="increment" onClick={increment}>Increment</button>
+  //         <button data-testid="decrement" onClick={decrement}>Decrement</button>
+  //       </$Providers>
+  //     </div>
+  //   ))
+
+  //   const p = getByTestId('value')
+  //   const out = getByTestId('out')
+  //   const incrementBtn = getByTestId('increment')
+  //   const decrementBtn = getByTestId('decrement')
+  //   console.log(out.innerHTML)
+  //   expect(p.innerText).toBe('0')
+  //   fireEvent.click(incrementBtn)
+  //   console.log(out.innerHTML)
+  //   expect(p.innerText).toBe('1')
+  //   fireEvent.click(decrementBtn)
+  //   console.log(out.innerHTML)
+  //   expect(p.innerText).toBe('0')
+  //   unmount()
+  // })
   test('should successfully use nest $store()', () => {
     const initialState = { count: 0 }
     const useStore = $store('test', {
@@ -123,7 +158,7 @@ describe('test store', () => {
         decrement: () => set('count', n => n - 1),
       }),
     })
-    const { store, fresh, decrement, increment } = useStore
+    const { store, fresh, decrement, increment } = useStore()
     const useTempStore = $store('temp', {
       state: initialState,
       action: set => ({
@@ -133,7 +168,7 @@ describe('test store', () => {
         },
       }),
     })
-    const { store: tempStore, generate } = useTempStore
+    const { store: tempStore, generate } = useTempStore()
     const { unmount, getByTestId } = render(() => (
       <div>
         <p data-testid="value">{store.count}</p>
@@ -177,7 +212,7 @@ describe('test store', () => {
         debug: true,
       },
     })
-    const { store, decrement, increment } = useStore
+    const { store, decrement, increment } = useStore()
     const { unmount, getByTestId } = render(() => (
       <div>
         <p data-testid="value">{store.count}</p>
@@ -201,7 +236,7 @@ describe('test store', () => {
     fireEvent.click(incrementBtn)
     unmount()
     const { container: newContainer } = render(() => (
-      <p>{useStore.store.count}</p>
+      <p>{useStore().store.count}</p>
     ))
     const newP = newContainer.querySelector('p')!
     expect(kv.get('test')).toBe('{"count":2}')

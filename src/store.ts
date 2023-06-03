@@ -1,5 +1,5 @@
 import { trackStore } from '@solid-primitives/deep'
-import { batch, createEffect, createMemo, createRoot, getOwner, on, onMount, runWithOwner, untrack } from 'solid-js'
+import { batch, createContext, createEffect, createMemo, getOwner, on, onMount, runWithOwner, untrack, useContext } from 'solid-js'
 import { createStore, reconcile, unwrap } from 'solid-js/store'
 import type { SetStoreFunction, Store } from 'solid-js/store/types/store'
 
@@ -105,6 +105,8 @@ export function deepClone<T>(target: T): T {
   return newTarget
 }
 
+// const stores: FlowComponent<any>[] = []
+
 /**
  * create state
  * @param name store name
@@ -117,13 +119,14 @@ export function $store<
 >(
   name: string,
   setup: StoreSetup<T, Getter, Action>,
-): UseStoreReturn<T, Getter, Action> {
+): () => UseStoreReturn<T, Getter, Action> {
   const { action = () => ({}), getter = () => ({}), state, persist } = setup
   const initalState = typeof state === 'function' ? state() : state
   const [store, setStore] = createStore<T>(deepClone(initalState), { name })
 
   const storeFn = () => {
     const option = normalizePersistOption(name, persist)
+    console.log(getOwner())
     if (option) {
       const { debug, key, serializer: { deserialize, serialize }, storage } = option
       onMount(() => {
@@ -159,5 +162,32 @@ export function $store<
         }),
     } as UseStoreReturn<T, Getter, Action>
   }
-  return createRoot(storeFn)
+
+  const ctx = createContext(storeFn())
+  // stores.push(ctx.Provider)
+
+  return () => useContext(ctx)
 }
+
+// export function $Providers(props: {
+//   values?: readonly FlowComponent[]
+//   children: JSX.Element
+// }): JSX.Element {
+//   const { values } = props
+//   const providers = [...stores, ...(values ?? [])]
+//   const fn = (i: number): JSX.Element => {
+//     const item = providers[i]
+
+//     if (!item) {
+//       return props.children
+//     }
+
+//     const ctxProps: { value?: any; children: JSX.Element } = {
+//       get children() {
+//         return fn(i + 1)
+//       },
+//     }
+//     return createComponent(item, ctxProps)
+//   }
+//   return fn(0)!
+// }
