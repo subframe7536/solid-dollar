@@ -126,7 +126,6 @@ export function $store<
 
   const storeFn = () => {
     const option = normalizePersistOption(name, persist)
-    console.log(getOwner())
     if (option) {
       const { debug, key, serializer: { deserialize, serialize }, storage } = option
       onMount(() => {

@@ -93,6 +93,16 @@ async function buildWebFsHandleNodeTree(
     }
     return extensions.test(filename)
   }
+
+  const queue: [FileSystemHandle, string[]][] = [[handle, []]]
+  const nodes: WebFsHandleNode[] = []
+
+  while (queue.length) {
+    const batch = queue.splice(0, 8)
+    const batchNodes = await Promise.all(batch.map(([handle, path]) => build(handle, path)))
+    nodes.push(...batchNodes.filter(node => node))
+  }
+
   async function build(
     handle: FileSystemHandle,
     path: string[],
@@ -107,15 +117,19 @@ async function buildWebFsHandleNodeTree(
       node.children = []
       for await (const entry of entries) {
         if (matchExtension(entry[0])) {
-          const child = await build(entry[1], node.path)
-          child && node.children.push(child)
+          queue.push([entry[1], node.path])
         }
       }
     }
 
     return node
   }
-  return build(handle, [])
+
+  return {
+    handle,
+    path: [handle.name],
+    children: nodes,
+  }
 }
 
 async function walkWebFsNodeTree(
@@ -124,7 +138,12 @@ async function walkWebFsNodeTree(
   extensions?: string[] | RegExp,
   addTime?: boolean,
 ) {
-  async function walk(node: WebFsHandleNode): Promise<WebFile[]> {
+  const queue: WebFsHandleNode[] = []
+  const fileArray: WebFile[] = []
+  const _root = 'path' in root ? root : await buildWebFsHandleNodeTree(root, extensions)
+  queue.push(_root)
+
+  async function walk(node: WebFsHandleNode): Promise<void> {
     const combinedPath = node.path.join('/')
     if (!handleMap.has(combinedPath)) {
       handleMap.set(combinedPath, node.handle)
@@ -132,23 +151,23 @@ async function walkWebFsNodeTree(
     if (node.handle.kind === 'file') {
       const fileHandle = node.handle as FileSystemFileHandle
       const webFile = await parseFile(node.path, fileHandle, addTime)
-      return [webFile]
+      fileArray.push(webFile)
+    } else if (node.children) {
+      queue.push(...node.children)
     }
-
-    if (!node.children) {
-      return []
-    }
-    const childrenFiles = await Promise.all(
-      node.children.map(childNode => walk(childNode)),
-    )
-    return childrenFiles.flat()
   }
-  const _root = 'path' in root ? root : await buildWebFsHandleNodeTree(root, extensions)
+
+  while (queue.length > 0) {
+    const batch = queue.splice(0, 8)
+    await Promise.all(batch.map(node => walk(node)))
+  }
+
   return {
     nodeTree: _root,
-    fileArray: await walk(_root),
+    fileArray,
   }
 }
+
 class UnSupportedError extends Error {}
 export function isSupportFs() {
   return typeof globalThis.showDirectoryPicker === 'function'
