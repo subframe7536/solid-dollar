@@ -36,7 +36,7 @@ consolo.log(data())
 support for persist store. inspired by `@solid-primitives/context` and `pinia`
 
 ```tsx
-const [Provider, useStore] = $store('test', {
+const useStore = $store('test', {
   state: { test: 1 },
   getter: state => ({
     doubleValue() {
@@ -59,29 +59,11 @@ const [Provider, useStore] = $store('test', {
 })
 const { store, double, plus, $patch, $reset, $subscribe } = useStore()
 render(() => (
-  <Provider>
-    <div>
-      <p>{store.count}</p>
-      <button onClick={double}>double</button>
-      <button onClick={() => plus(2)}>plus 2</button>
-    </div>
-  </Provider>
-))
-```
-
-### `$Providers`
-
-combine multiple providers
-
-```tsx
-render(() => (
-  <$Providers values={[Provider1, Provider2]}>
-    <div>
-      <p>{store.count}</p>
-      <button onClick={increment}>Increment</button>
-      <button onClick={decrement}>Decrement</button>
-    </div>
-  </$Providers>
+  <div>
+    <p>{store.count}</p>
+    <button onClick={double}>double</button>
+    <button onClick={() => plus(2)}>plus 2</button>
+  </div>
 ))
 ```
 
@@ -125,5 +107,31 @@ locale('testDict')
 FileSystem Access Api
 
 ```ts
+type WebFile = {
+  /**
+   * relative dir path of root exclude `.`, sep: `/`
+   */
+  dir: string
+  name: string
+  /**
+   * with dot
+   */
+  ext: string
+  /**
+   * set to 0 when fail to get file
+   */
+  size: number
+  addTime?: Date
+  /**
+   * set to current date when fail to get file
+   */
+  modifiedTime: Date
+  instance: File | undefined
+}
 
+const { fetchTree, root, fileArray, handleMap } = $fs()
+await fetchTree()
+console.log(handleMap) // Map<string, FileSystemHandle> file/dir relative path => handle
+console.log(fileArray()) // Array<FileSystemHandle>
+console.log(root()) // root FileSystemHandle
 ```
