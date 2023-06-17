@@ -1,5 +1,6 @@
 import { trackStore } from '@solid-primitives/deep'
-import { batch, createContext, createEffect, createMemo, getOwner, on, onMount, runWithOwner, untrack, useContext } from 'solid-js'
+import type { Context, FlowComponent, JSX, ParentComponent, ParentProps } from 'solid-js'
+import { batch, createComponent, createContext, createEffect, createMemo, getOwner, on, onMount, runWithOwner, untrack, useContext } from 'solid-js'
 import { createStore, reconcile, unwrap } from 'solid-js/store'
 import type { SetStoreFunction, Store } from 'solid-js/store/types/store'
 
@@ -105,8 +106,6 @@ export function deepClone<T>(target: T): T {
   return newTarget
 }
 
-// const stores: FlowComponent<any>[] = []
-
 /**
  * create state
  * @param name store name
@@ -116,13 +115,30 @@ export function $store<
   T extends object = {},
   Getter extends GetterReturn = {},
   Action extends ActionReturn = {},
+  Is extends boolean | undefined = undefined,
 >(
   name: string,
   setup: StoreSetup<T, Getter, Action>,
-): () => UseStoreReturn<T, Getter, Action> {
+  provider?: Is,
+): Is extends false | undefined
+    ? () => UseStoreReturn<T, Getter, Action>
+    : readonly [provider: ParentComponent, useStore: () => UseStoreReturn<T, Getter, Action> | undefined] {
   const { action = () => ({}), getter = () => ({}), state, persist } = setup
   const initalState = typeof state === 'function' ? state() : state
   const [store, setStore] = createStore<T>(deepClone(initalState), { name })
+
+  const ctxData = {
+    store,
+    ...parseGetter(getter(store)),
+    ...parseAction(action(setStore)),
+    $patch: (state: Partial<T>) => setStore(reconcile(Object.assign({}, unwrap(store), state), { key: name, merge: true })),
+    $reset: () => setStore(initalState),
+    $subscribe: (callback: (state: T) => void) => runWithOwner(getOwner(), () => {
+      createEffect(on(() => trackStore(store), (state) => {
+        callback(state)
+      }, { defer: true }))
+    }),
+  } as UseStoreReturn<T, Getter, Action>
 
   const storeFn = () => {
     const option = normalizePersistOption(name, persist)
@@ -147,46 +163,42 @@ export function $store<
         storage.setItem(option.key, serialize(state))
       }, { defer: true }))
     }
-    return {
-      store,
-      ...parseGetter(getter(store)),
-      ...parseAction(action(setStore)),
-      $patch: (state: Partial<T>) => setStore(reconcile(Object.assign({}, unwrap(store), state), { key: name, merge: true })),
-      $reset: () => setStore(initalState),
-      $subscribe: (callback: (state: T) => void) =>
-        runWithOwner(getOwner(), () => {
-          createEffect(on(() => trackStore(store), (state) => {
-            callback(state)
-          }, { defer: true }))
-        }),
-    } as UseStoreReturn<T, Getter, Action>
+    return ctxData
   }
 
-  const ctx = createContext(storeFn())
-  // stores.push(ctx.Provider)
-
-  return () => useContext(ctx)
+  const ctx = provider ? createContext() : createContext(storeFn())
+  return (provider
+    ? [
+        (props: ParentProps): JSX.Element =>
+          createComponent(ctx.Provider, {
+            value: storeFn(),
+            get children() {
+              return props.children
+            },
+          }),
+        () => useContext(ctx as Context<unknown>),
+      ] as const
+    : () => useContext(ctx as Context<UseStoreReturn<T, Getter, Action>>)) as any
 }
 
-// export function $Providers(props: {
-//   values?: readonly FlowComponent[]
-//   children: JSX.Element
-// }): JSX.Element {
-//   const { values } = props
-//   const providers = [...stores, ...(values ?? [])]
-//   const fn = (i: number): JSX.Element => {
-//     const item = providers[i]
+export function $Providers(props: {
+  values: readonly FlowComponent[]
+  children: JSX.Element
+}): JSX.Element {
+  const { values } = props
+  const fn = (i: number): JSX.Element => {
+    const item = values[i]
 
-//     if (!item) {
-//       return props.children
-//     }
+    if (!item) {
+      return props.children
+    }
 
-//     const ctxProps: { value?: any; children: JSX.Element } = {
-//       get children() {
-//         return fn(i + 1)
-//       },
-//     }
-//     return createComponent(item, ctxProps)
-//   }
-//   return fn(0)!
-// }
+    const ctxProps: { value?: any; children: JSX.Element } = {
+      get children() {
+        return fn(i + 1)
+      },
+    }
+    return createComponent(item, ctxProps)
+  }
+  return fn(0)!
+}

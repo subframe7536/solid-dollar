@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render } from '@solidjs/testing-library'
 import { describe, expect, test, vi } from 'vitest'
-import { $store, normalizePersistOption } from '../src/store'
+import { $Providers, $store, normalizePersistOption } from '../src/store'
 
 describe('test normalizePersistOption()', () => {
   test('returns undefined with undefined option', () => {
@@ -109,41 +109,43 @@ describe('test store', () => {
     expect(doubleValue()).toBe(2)
     expect(callback).toHaveBeenCalledTimes(4)
   })
-  // test('stores outside $Providers should not be affected', () => {
-  //   const initialState = { count: 0 }
-  //   const useStore = $store('test', {
-  //     state: initialState,
-  //     action: set => ({
-  //       increment: () => set('count', n => n + 1),
-  //       decrement: () => set('count', n => n - 1),
-  //     }),
-  //   })
-  //   const { store, decrement, increment } = useStore()
-  //   const { unmount, getByTestId } = render(() => (
-  //     <div>
-  //       <p data-testid="out">{store.count}</p>
-  //       <$Providers>
-  //         <p data-testid="value">{store.count}</p>
-  //         <button data-testid="increment" onClick={increment}>Increment</button>
-  //         <button data-testid="decrement" onClick={decrement}>Decrement</button>
-  //       </$Providers>
-  //     </div>
-  //   ))
+  test('stores outside $Providers should be undefined', () => {
+    const initialState = { count: 0 }
+    const [testProvider, useStore] = $store('test', {
+      state: initialState,
+      action: set => ({
+        increment: () => set('count', n => n + 1),
+        decrement: () => set('count', n => n - 1),
+      }),
+    }, true)
+    const storeObject = useStore()
+    expect(storeObject).toBeUndefined()
+    const Inner = () => {
+      const { store, decrement, increment } = useStore()!
+      return (
+        <div>
+          <p data-testid="value">{store.count}</p>
+          <button data-testid="increment" onClick={increment}>Increment</button>
+          <button data-testid="decrement" onClick={decrement}>Decrement</button>
+        </div>
+      )
+    }
+    const { unmount, getByTestId } = render(() => (
+      <$Providers values={[testProvider]}>
+        <Inner />
+      </$Providers>
+    ))
 
-  //   const p = getByTestId('value')
-  //   const out = getByTestId('out')
-  //   const incrementBtn = getByTestId('increment')
-  //   const decrementBtn = getByTestId('decrement')
-  //   console.log(out.innerHTML)
-  //   expect(p.innerText).toBe('0')
-  //   fireEvent.click(incrementBtn)
-  //   console.log(out.innerHTML)
-  //   expect(p.innerText).toBe('1')
-  //   fireEvent.click(decrementBtn)
-  //   console.log(out.innerHTML)
-  //   expect(p.innerText).toBe('0')
-  //   unmount()
-  // })
+    const p = getByTestId('value')
+    const incrementBtn = getByTestId('increment')
+    const decrementBtn = getByTestId('decrement')
+    expect(p.innerText).toBe('0')
+    fireEvent.click(incrementBtn)
+    expect(p.innerText).toBe('1')
+    fireEvent.click(decrementBtn)
+    expect(p.innerText).toBe('0')
+    unmount()
+  })
   test('should successfully use nest $store()', () => {
     const initialState = { count: 0 }
     const useStore = $store('test', {
