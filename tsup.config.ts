@@ -7,9 +7,4 @@ export default defineConfig({
   shims: true,
   dts: true,
   treeshake: true,
-  outExtension({ format }) {
-    return {
-      js: `.${format === 'esm' ? 'mjs' : format}`,
-    }
-  },
 })

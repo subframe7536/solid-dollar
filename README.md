@@ -33,10 +33,14 @@ consolo.log(data())
 
 ## `$store`
 
-support for persist store. inspired by `@solid-primitives/context` and `pinia`
+`createStore` wrapper
+
+## `$state`
+
+support for persist store
 
 ```tsx
-const useStore = $store('test', {
+const useStore = $state('test', {
   state: { test: 1 },
   getter: state => ({
     doubleValue() {
@@ -55,6 +59,7 @@ const useStore = $store('test', {
     enable: true,
     storage: localStorage,
     debug: true,
+    path: ['test'] // type safe!
   },
 })
 const { store, double, plus, $patch, $reset, $subscribe } = useStore()
