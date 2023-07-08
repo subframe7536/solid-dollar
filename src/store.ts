@@ -1,5 +1,7 @@
 import { trackStore } from '@solid-primitives/deep'
-import type { Context, FlowComponent, JSX, ParentComponent, ParentProps } from 'solid-js'
+import { pathGet, pathSet } from 'object-standard-path'
+import type { Path, PathValue } from 'object-standard-path'
+import type { Context, JSX, ParentComponent, ParentProps } from 'solid-js'
 import { batch, createComponent, createContext, createEffect, createMemo, getOwner, on, onMount, runWithOwner, untrack, useContext } from 'solid-js'
 import { createStore, reconcile, unwrap } from 'solid-js/store'
 import type { SetStoreFunction, Store } from 'solid-js/store/types/store'
@@ -17,11 +19,12 @@ export type StoreSetup<
   Store extends object,
   Getter extends GetterReturn,
   Action extends ActionReturn,
+  Paths extends Path<Store>[],
 > = {
   state: Store | (() => Store)
   getter?: GetterFunctions<Store, Getter>
   action?: ActionFunctions<Store, Action>
-  persist?: PersistOption<Store>
+  persist?: PersistOption<Store, Paths>
 }
 
 export type ActionFunctions<T, R> = (set: SetStoreFunction<T>) => R
@@ -29,15 +32,35 @@ export type ActionReturn = Record<string, (...args: any[]) => void>
 export type GetterFunctions<T, R> = (state: Store<T>) => R
 export type GetterReturn = ActionReturn
 
-export type PersistOption<T extends object> =
-  Partial<NormalizedPersistOption<T>> & {
-    enable: boolean
-  }
-export type NormalizedPersistOption<T extends object> = {
+export type PersistOption<T extends object, Paths extends Path<T>[]> = Partial<NormalizedPersistOption<T, Paths>> & {
+  enable: boolean
+}
+export type NormalizedPersistOption<T extends object, K extends Path<T>[] = []> = {
   storage: StorageLike
   key: string
-  serializer: Serializer<T>
+  serializer: Serializer<FlattenType<PartialObject<T, K>>>
   debug: boolean
+  paths: K | undefined
+}
+type PartialObject<
+  T extends object,
+  K extends Path<T>[],
+  V = {},
+> = K['length'] extends 0
+  ? T
+  : K['length'] extends 1
+    ? { [P in Extract<K[0], string>]: PathValue<T, P> }
+    : K extends [infer A, ...infer B]
+      ? B extends any[]
+        ? V & {
+          [P in Extract<A, string>]: PathValue<T, Extract<A, string>>;
+        } & PartialObject<T, B, V>
+        : V & { [P in Extract<A, string>]: PathValue<T, Extract<A, string>> }
+      : never
+
+type FlattenType<T> = T extends infer U ? ConvertType<{ [K in keyof U]: U[K] }> : never
+type ConvertType<T> = {
+  [K in keyof T as K extends `${infer A}.${string}` ? A : K]: K extends `${string}.${infer B}` ? ConvertType<{ [P in B]: T[K] }> : T[K];
 }
 export type StorageLike = Pick<Storage, 'getItem' | 'setItem'>
 interface Serializer<T> {
@@ -54,10 +77,10 @@ interface Serializer<T> {
   deserialize: (value: string) => T
 }
 
-export function normalizePersistOption<T extends object>(
+export function normalizePersistOption<T extends object, Paths extends Path<T>[]>(
   name: string,
-  option: PersistOption<T> | undefined,
-): NormalizedPersistOption<T> | undefined {
+  option: PersistOption<T, Paths> | undefined,
+): NormalizedPersistOption<T, Paths> | undefined {
   return (!option || !option.enable)
     ? undefined
     : {
@@ -68,6 +91,7 @@ export function normalizePersistOption<T extends object>(
           deserialize: option?.serializer?.deserialize ?? JSON.parse,
         },
         storage: option?.storage ?? localStorage,
+        paths: option.paths,
       }
 }
 
@@ -106,19 +130,33 @@ export function deepClone<T>(target: T): T {
   return newTarget
 }
 
+export type StoreObject<T> = Store<T> & {
+  set: SetStoreFunction<T>
+}
+
+export function $store<T extends object = {}>(initialValue?: T): StoreObject<T> {
+  const [store, setStore] = createStore(initialValue)
+  const ret = store as StoreObject<T>
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-expect-error
+  ret.set = setStore
+  return ret
+}
+
 /**
- * create state
+ * create global state
  * @param name store name
  * @param setup store setup object
  */
-export function $store<
+export function $state<
   T extends object = {},
   Getter extends GetterReturn = {},
   Action extends ActionReturn = {},
+  Paths extends Path<T>[] = [],
   Is extends boolean | undefined = undefined,
 >(
   name: string,
-  setup: StoreSetup<T, Getter, Action>,
+  setup: StoreSetup<T, Getter, Action, Paths>,
   provider?: Is,
 ): Is extends false | undefined
     ? () => UseStoreReturn<T, Getter, Action>
@@ -140,18 +178,29 @@ export function $store<
     }),
   } as UseStoreReturn<T, Getter, Action>
 
-  const storeFn = () => {
+  const stateFn = () => {
     const option = normalizePersistOption(name, persist)
     if (option) {
-      const { debug, key, serializer: { deserialize, serialize }, storage } = option
+      const { debug, key, serializer: { deserialize, serialize }, storage, paths } = option
+      function persistItems() {
+        if (!paths) {
+          storage.setItem(key, serialize(store as any))
+          return
+        }
+        const obj = {}
+        paths.forEach((path) => {
+          pathSet(obj, path as any, pathGet(store, path))
+        })
+        storage.setItem(key, serialize(obj as any))
+      }
       onMount(() => {
         const stored = storage.getItem(key)
         try {
           if (stored) {
-            setStore(deserialize(stored))
+            ctxData.$patch(deserialize(stored))
             debug && console.log(`[$store - ${key}]: read from persisted, value: ${stored}`)
           } else {
-            storage.setItem(option.key, serialize(store))
+            persistItems()
             debug && console.log(`[$store - ${key}]: no persisted data, initialize`)
           }
         } catch (e) {
@@ -160,18 +209,18 @@ export function $store<
       })
       createEffect(on(() => trackStore(store), (state) => {
         debug && console.log(`[$store - ${key}]: update to ${JSON.stringify(state)}`)
-        storage.setItem(option.key, serialize(state))
+        persistItems()
       }, { defer: true }))
     }
     return ctxData
   }
 
-  const ctx = provider ? createContext() : createContext(storeFn())
+  const ctx = provider ? createContext() : createContext(stateFn())
   return (provider
     ? [
         (props: ParentProps): JSX.Element =>
           createComponent(ctx.Provider, {
-            value: storeFn(),
+            value: stateFn(),
             get children() {
               return props.children
             },
@@ -179,26 +228,4 @@ export function $store<
         () => useContext(ctx as Context<unknown>),
       ] as const
     : () => useContext(ctx as Context<UseStoreReturn<T, Getter, Action>>)) as any
-}
-
-export function $Providers(props: {
-  values: readonly FlowComponent[]
-  children: JSX.Element
-}): JSX.Element {
-  const { values } = props
-  const fn = (i: number): JSX.Element => {
-    const item = values[i]
-
-    if (!item) {
-      return props.children
-    }
-
-    const ctxProps: { value?: any; children: JSX.Element } = {
-      get children() {
-        return fn(i + 1)
-      },
-    }
-    return createComponent(item, ctxProps)
-  }
-  return fn(0)!
 }

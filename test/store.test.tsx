@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render } from '@solidjs/testing-library'
 import { describe, expect, test, vi } from 'vitest'
-import { $Providers, $store, normalizePersistOption } from '../src/store'
+import { $state, normalizePersistOption } from '../src/store'
 
 describe('test normalizePersistOption()', () => {
   test('returns undefined with undefined option', () => {
@@ -22,7 +22,7 @@ describe('test normalizePersistOption()', () => {
   })
   test('returns normalized options with custom options', () => {
     const kv = new Map()
-    const testObj = normalizePersistOption('testObj', {
+    const testObj = normalizePersistOption<{ test: string }, []>('testObj', {
       enable: true,
       debug: true,
       key: 'test',
@@ -74,7 +74,7 @@ describe('test normalizePersistOption()', () => {
 })
 describe('test store', () => {
   test('$store()', () => {
-    const useTestStore = $store('test', {
+    const useTestStore = $state('test', {
       state: { test: 1, foo: 'bar' },
       getter: state => ({
         doubleValue() {
@@ -109,9 +109,9 @@ describe('test store', () => {
     expect(doubleValue()).toBe(2)
     expect(callback).toHaveBeenCalledTimes(4)
   })
-  test('stores outside $Providers should be undefined', () => {
+  test('stores outside provider should be undefined', () => {
     const initialState = { count: 0 }
-    const [testProvider, useStore] = $store('test', {
+    const [Provider, useStore] = $state('test', {
       state: initialState,
       action: set => ({
         increment: () => set('count', n => n + 1),
@@ -131,9 +131,9 @@ describe('test store', () => {
       )
     }
     const { unmount, getByTestId } = render(() => (
-      <$Providers values={[testProvider]}>
+      <Provider>
         <Inner />
-      </$Providers>
+      </Provider>
     ))
 
     const p = getByTestId('value')
@@ -148,7 +148,7 @@ describe('test store', () => {
   })
   test('should successfully use nest $store()', () => {
     const initialState = { count: 0 }
-    const useStore = $store('test', {
+    const useStore = $state('test', {
       state: initialState,
       getter: store => ({
         fresh: () => {
@@ -161,7 +161,7 @@ describe('test store', () => {
       }),
     })
     const { store, fresh, decrement, increment } = useStore()
-    const useTempStore = $store('temp', {
+    const useTempStore = $state('temp', {
       state: initialState,
       action: set => ({
         generate: () => {
@@ -195,7 +195,7 @@ describe('test store', () => {
   test('should persist state to storage', () => {
     const initialState = { count: 0 }
     const kv = new Map()
-    const useStore = $store('test', {
+    const useStore = $state('test', {
       state: initialState,
       action: set => ({
         increment: () => set('count', n => n + 1),
@@ -243,6 +243,60 @@ describe('test store', () => {
     const newP = newContainer.querySelector('p')!
     expect(kv.get('test')).toBe('{"count":2}')
     expect(newP.innerText).toBe('2')
+    cleanup()
+  })
+  test('should persist state to storage by paths', () => {
+    const initialState = { persist: { count: 0 }, nonePersist: 'test' }
+    const kv = new Map()
+    const useStore = $state('test', {
+      state: initialState,
+      action: set => ({
+        increment: () => {
+          set('persist', 'count', n => n + 1)
+          set('nonePersist', 'increment')
+        },
+        decrement: () => {
+          set('persist', 'count', n => n - 1)
+          set('nonePersist', 'decrement')
+        },
+      }),
+      persist: {
+        enable: true,
+        storage: {
+          getItem(key) {
+            return kv.get(key)
+          },
+          setItem(key, value) {
+            kv.set(key, value)
+          },
+        },
+        debug: true,
+        paths: ['persist.count'],
+      },
+    })
+    const { store, decrement, increment } = useStore()
+    const { unmount, getByTestId } = render(() => (
+      <div>
+        <p data-testid="value">{store.persist.count}</p>
+        <button data-testid="increment" onClick={increment}>Increment</button>
+        <button data-testid="decrement" onClick={decrement}>Decrement</button>
+      </div>
+    ))
+
+    const p = getByTestId('value')
+    const incrementBtn = getByTestId('increment')
+    const decrementBtn = getByTestId('decrement')
+    expect(p.innerText).toBe('0')
+    expect(kv.get('test')).toBe('{"persist":{"count":0}}')
+    fireEvent.click(incrementBtn)
+    expect(p.innerText).toBe('1')
+    expect(kv.get('test')).toBe('{"persist":{"count":1}}')
+    fireEvent.click(decrementBtn)
+    expect(p.innerText).toBe('0')
+    expect(kv.get('test')).toBe('{"persist":{"count":0}}')
+    fireEvent.click(incrementBtn)
+    fireEvent.click(incrementBtn)
+    unmount()
     cleanup()
   })
 })
